@@ -29,6 +29,10 @@ impl LoginFlow {
 
 		Ok(Self { client })
 	}
+
+	pub fn take_client(self) -> reqwest::Client {
+		self.client
+	}
 }
 
 // --- oauth implementation start

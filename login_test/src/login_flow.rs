@@ -1,10 +1,12 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, collections::HashMap};
 
 use anyhow::{Context, anyhow};
 use base64::{Engine, prelude::BASE64_URL_SAFE_NO_PAD};
 use scraper::{Html, Selector};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sha2::Digest;
+
+pub const CLIENT_ID: &str = "kreta-ellenorzo-student-mobile-android";
 
 use crate::credentials::Credentials;
 
@@ -68,7 +70,7 @@ impl LoginFlow {
 
 		let (verifier, challenge) = challenge();
 
-		let req = self.client.get(format!("https://idp.e-kreta.hu/connect/authorize?redirect_uri=https://mobil.e-kreta.hu/ellenorzo-student/prod/oauthredirect&client_id=kreta-ellenorzo-student-mobile-android&response_type=code&prompt=login&state={state}&nonce={nonce}&scope=openid email offline_access kreta-ellenorzo-webapi.public kreta-eugyintezes-webapi.public kreta-fileservice-webapi.public kreta-mobile-global-webapi.public kreta-dkt-webapi.public kreta-ier-webapi.public&code_challenge={challenge}&code_challenge_method=S256")).build()?;
+		let req = self.client.get(format!("https://idp.e-kreta.hu/connect/authorize?redirect_uri=https://mobil.e-kreta.hu/ellenorzo-student/prod/oauthredirect&client_id={CLIENT_ID}&response_type=code&prompt=login&state={state}&nonce={nonce}&scope=openid email offline_access kreta-ellenorzo-webapi.public kreta-eugyintezes-webapi.public kreta-fileservice-webapi.public kreta-mobile-global-webapi.public kreta-dkt-webapi.public kreta-ier-webapi.public&code_challenge={challenge}&code_challenge_method=S256")).build()?;
 		let resp = self.client.execute(req).await?;
 		let resp = resp.error_for_status()?;
 
@@ -236,4 +238,113 @@ impl LoginFlow {
 
 		Ok(())
 	}
+}
+
+#[derive(Clone, Debug, Serialize)]
+/// the data we send to https://idp.e-kreta.hu/connect/token
+pub struct ConnectTokenBody<'a> {
+	code: Cow<'a, str>,
+	grant_type: Cow<'a, str>,
+	redirect_uri: Cow<'a, str>,
+	code_verifier: Cow<'a, str>,
+	client_id: Cow<'a, str>,
+}
+impl<'a> ConnectTokenBody<'a> {
+	pub fn new_explicit(
+		code: impl Into<Cow<'a, str>>,
+		grant_type: impl Into<Cow<'a, str>>,
+		redirect_uri: impl Into<Cow<'a, str>>,
+		code_verifier: impl Into<Cow<'a, str>>,
+		client_id: impl Into<Cow<'a, str>>,
+	) -> Self {
+		let code = code.into();
+		let grant_type = grant_type.into();
+		let redirect_uri = redirect_uri.into();
+		let code_verifier = code_verifier.into();
+		let client_id = client_id.into();
+
+		Self {
+			code,
+			grant_type,
+			redirect_uri,
+			code_verifier,
+			client_id,
+		}
+	}
+}
+
+impl LoginFlow {
+	/// returns the url the return url forwarded the client to (see /thanks.py if all this is confusing)
+	async fn resolve_return_url(&self, begin_data: &BeginData) -> anyhow::Result<String> {
+		let basic_return_url = format!("https://idp.e-kreta.hu{}", begin_data.return_url);
+
+		let req = self.client.get(&basic_return_url).build()?;
+		let resp = self.client.execute(req).await?;
+		let resp = resp.error_for_status()?;
+
+		Ok(resp.url().as_str().into())
+	}
+	async fn resolve_return_url_code(&self, begin_data: &BeginData) -> anyhow::Result<String> {
+		let resolved_return_url = self.resolve_return_url(begin_data).await?;
+
+		let code = resolved_return_url.split("code=").nth(1).ok_or_else(|| anyhow!("url returned by LoginFlow.resolve_return_url is invalid, as there's no code= segment\n{resolved_return_url}"))?;
+		let code = code.split('&').next().ok_or_else(|| anyhow!("url returned by LoginFlow.resolve_return_url is invalid, as there's no & symbol after code=\n{resolved_return_url}"))?;
+
+		Ok(code.into())
+	}
+
+	pub async fn request_token(&self, begin_data: &BeginData) -> anyhow::Result<Tokens> {
+		let code = self.resolve_return_url_code(begin_data).await?;
+		let grant_type = "authorization_code";
+		let redirect_uri = "https://mobil.e-kreta.hu/ellenorzo-student/prod/oauthredirect";
+		let code_verifier = &begin_data.verifier;
+
+		let connect_token_body = ConnectTokenBody::new_explicit(
+			code,
+			grant_type,
+			redirect_uri,
+			code_verifier,
+			CLIENT_ID,
+		);
+
+		self.request_token_map(&connect_token_body).await
+	}
+	pub async fn request_token_map<S: Serialize>(&self, map: &S) -> anyhow::Result<Tokens> {
+		let req = self
+			.client
+			.post("https://idp.e-kreta.hu/connect/token")
+			.header(
+				"User-Agent",
+				"hu.ekreta.student/5.8.0+2025082301/SM-S9280/9/28",
+			)
+			.form(map)
+			.build()?;
+
+		let resp = self.client.execute(req).await?;
+		let status_code = resp.status();
+		if !status_code.is_success() {
+			let body = resp.text().await?;
+			let err =
+				anyhow!("post_credentials received non-ok status code: {status_code}\n{body}");
+			return Err(err);
+		}
+
+		let tokens: Tokens = resp.json().await.with_context(|| {
+			format!(
+				"everything went fine but the body of the /connect/token endpoint isn't valid json"
+			)
+		})?;
+
+		Ok(tokens)
+	}
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct Tokens {
+	id_token: String,
+	access_token: String,
+	expires_in: i32,
+	token_type: String,
+	refresh_token: String,
+	scope: String,
 }

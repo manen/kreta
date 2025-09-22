@@ -21,6 +21,9 @@ async fn start() -> anyhow::Result<()> {
 
 	let data = login_flow.begin().await?;
 	login_flow.post_credentials(&data, &credentials).await?;
+	let tokens = login_flow.request_token(&data).await?;
+
+	println!("{tokens:#?}");
 
 	Ok(())
 }

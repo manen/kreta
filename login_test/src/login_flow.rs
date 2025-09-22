@@ -1,13 +1,9 @@
-use std::{borrow::Cow, collections::HashMap};
+use std::borrow::Cow;
 
 use anyhow::{Context, anyhow};
 use base64::{Engine, prelude::BASE64_URL_SAFE_NO_PAD};
-use reqwest::{
-	StatusCode,
-	header::{HeaderMap, HeaderName, HeaderValue},
-};
 use scraper::{Html, Selector};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use sha2::Digest;
 
 use crate::credentials::Credentials;
@@ -31,7 +27,41 @@ impl LoginFlow {
 
 		Ok(Self { client })
 	}
+}
 
+// --- oauth implementation start
+
+#[derive(Clone, Debug)]
+/// all the data we have when we successfully requested and parsed the authentication page
+pub struct BeginData {
+	verifier: String,
+	return_url: String,
+	verification_token: String,
+}
+
+fn random_base64() -> String {
+	type T = [u8; 16];
+
+	let val: T = rand::random();
+
+	let token = BASE64_URL_SAFE_NO_PAD.encode(&val);
+	token
+}
+
+/// -> (verifier, challenge)
+fn challenge() -> (String, String) {
+	type Verifier = [u8; 64];
+
+	let verifier_bytes: Verifier = rand::random();
+	let verifier = BASE64_URL_SAFE_NO_PAD.encode(&verifier_bytes);
+
+	let digest = sha2::Sha256::digest(verifier.as_bytes());
+	let challenge = BASE64_URL_SAFE_NO_PAD.encode(digest);
+
+	(verifier, challenge)
+}
+
+impl LoginFlow {
 	async fn begin_send(&self) -> anyhow::Result<(String, String)> {
 		let state = random_base64();
 		let nonce = random_base64();
@@ -85,42 +115,6 @@ impl LoginFlow {
 		};
 
 		Ok(data)
-	}
-
-	pub async fn post_credentials(
-		&self,
-		begin_data: &BeginData,
-		credentials: &Credentials,
-	) -> anyhow::Result<()> {
-		let login_body = LoginBody::new(
-			&begin_data.return_url,
-			&begin_data.verification_token,
-			credentials,
-			"",
-			false,
-		);
-
-		self.post_credentials_map(&login_body).await
-	}
-	/// meant to be used with [LoginBody] but u do whatever u want lowkey
-	pub async fn post_credentials_map<M: Serialize>(&self, map: &M) -> anyhow::Result<()> {
-		let req = self
-			.client
-			.post("https://idp.e-kreta.hu/account/login")
-			// .post("https://adgadgadgadg.free.beeceptor.com/babab")
-			.form(map)
-			.build()?;
-		let resp = self.client.execute(req).await?;
-
-		let status_code = resp.status();
-		if !status_code.is_success() {
-			let body = resp.text().await?;
-			let err =
-				anyhow!("post_credentials received non-ok status code: {status_code}\n{body}");
-			return Err(err);
-		}
-
-		Ok(())
 	}
 }
 
@@ -206,32 +200,40 @@ impl<'a> LoginBody<'a> {
 	}
 }
 
-#[derive(Clone, Debug)]
-/// all the data we have when we successfully requested and parsed the authentication page
-pub struct BeginData {
-	verifier: String,
-	return_url: String,
-	verification_token: String,
-}
+impl LoginFlow {
+	pub async fn post_credentials(
+		&self,
+		begin_data: &BeginData,
+		credentials: &Credentials,
+	) -> anyhow::Result<()> {
+		let login_body = LoginBody::new(
+			&begin_data.return_url,
+			&begin_data.verification_token,
+			credentials,
+			"",
+			false,
+		);
 
-fn random_base64() -> String {
-	type T = [u8; 16];
+		self.post_credentials_map(&login_body).await
+	}
+	/// meant to be used with [LoginBody] but u do whatever u want lowkey
+	pub async fn post_credentials_map<M: Serialize>(&self, map: &M) -> anyhow::Result<()> {
+		let req = self
+			.client
+			.post("https://idp.e-kreta.hu/account/login")
+			// .post("https://adgadgadgadg.free.beeceptor.com/babab")
+			.form(map)
+			.build()?;
+		let resp = self.client.execute(req).await?;
 
-	let val: T = rand::random();
+		let status_code = resp.status();
+		if !status_code.is_success() {
+			let body = resp.text().await?;
+			let err =
+				anyhow!("post_credentials received non-ok status code: {status_code}\n{body}");
+			return Err(err);
+		}
 
-	let token = BASE64_URL_SAFE_NO_PAD.encode(&val);
-	token
-}
-
-/// -> (verifier, challenge)
-fn challenge() -> (String, String) {
-	type Verifier = [u8; 64];
-
-	let verifier_bytes: Verifier = rand::random();
-	let verifier = BASE64_URL_SAFE_NO_PAD.encode(&verifier_bytes);
-
-	let digest = sha2::Sha256::digest(verifier.as_bytes());
-	let challenge = BASE64_URL_SAFE_NO_PAD.encode(digest);
-
-	(verifier, challenge)
+		Ok(())
+	}
 }

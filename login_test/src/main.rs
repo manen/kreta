@@ -1,7 +1,6 @@
-use crate::{credentials::Credentials, login_flow::LoginFlow};
+use kreta_rs::login::LoginFlow;
 
-pub mod credentials;
-pub mod login_flow;
+mod creds_from_file;
 
 fn main() {
 	println!("Hello, world!");
@@ -15,7 +14,7 @@ fn main() {
 }
 
 async fn start() -> anyhow::Result<()> {
-	let credentials = Credentials::read_from_file("./credentials.txt").await?;
+	let credentials = creds_from_file::read_from_file("./credentials.txt").await?;
 
 	let login_flow = LoginFlow::new()?;
 

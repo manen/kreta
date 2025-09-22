@@ -8,7 +8,7 @@ use sha2::Digest;
 
 pub const CLIENT_ID: &str = "kreta-ellenorzo-student-mobile-android";
 
-use crate::credentials::Credentials;
+use super::credentials::Credentials;
 
 /// a login flow implementation that does not require the user to open kreta's website to log in;
 /// we kinda cheat our way around it by parsing the login page and filing the post request manually, as if it was sent from the browser

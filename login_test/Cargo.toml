@@ -4,11 +4,6 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-anyhow = "1.0.100"
-base64 = "0.22.1"
-rand = "0.9.2"
-reqwest = { version = "0.12.23", features = ["cookies", "json"] }
-scraper = "0.24.0"
-serde = { version = "1.0.226", features = ["derive"] }
-sha2 = "0.10.9"
-tokio = { version = "1.47.1", features = ["fs", "rt"] }
+anyhow.workspace = true
+kreta-rs.workspace = true
+tokio = { workspace = true, features = ["rt", "fs"] }

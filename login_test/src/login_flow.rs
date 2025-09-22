@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{borrow::Cow, collections::HashMap};
 
 use anyhow::{Context, anyhow};
 use base64::{Engine, prelude::BASE64_URL_SAFE_NO_PAD};
@@ -83,10 +83,17 @@ impl LoginFlow {
 		begin_data: &BeginData,
 		credentials: &Credentials,
 	) -> anyhow::Result<()> {
-		let login_body = LoginBody {};
+		let login_body = LoginBody::new(
+			&begin_data.return_url,
+			&begin_data.verification_token,
+			credentials,
+			"",
+			false,
+		);
 
 		self.post_credentials_map(&login_body).await
 	}
+	/// meant to be used with [LoginBody] but u do whatever u want lowkey
 	pub async fn post_credentials_map<M: Serialize>(&self, map: &M) -> anyhow::Result<()> {
 		let req = self
 			.client
@@ -94,14 +101,93 @@ impl LoginFlow {
 			.form(map)
 			.build()?;
 		let resp = self.client.execute(req).await?;
-		let resp = resp.error_for_status()?;
+		let _ = resp.error_for_status()?;
 
 		Ok(())
 	}
 }
 
 #[derive(Clone, Debug, Serialize)]
-pub struct LoginBody {}
+/// the body of the post request we send to https://idp.e-kreta.hu/account/login
+pub struct LoginBody<'a> {
+	#[serde(rename = "ReturnUrl")]
+	return_url: Cow<'a, str>,
+	#[serde(rename = "__RequestVerificationToken")]
+	request_verification_token: Cow<'a, str>,
+	#[serde(rename = "UserName")]
+	username: Cow<'a, str>,
+	#[serde(rename = "Password")]
+	passwd: Cow<'a, str>,
+	#[serde(rename = "InstituteCode")]
+	inst_code: Cow<'a, str>,
+
+	#[serde(rename = "loginType")]
+	/// just leave it as "InstituteLogin"
+	login_type: Cow<'a, str>,
+	#[serde(rename = "ClientId")]
+	client_id: Cow<'a, str>,
+
+	#[serde(rename = "IsTemporaryLogin")]
+	/// either "True" or "False"
+	is_temporary_login: Cow<'a, str>,
+}
+impl<'a> LoginBody<'a> {
+	pub fn new_explicit(
+		return_url: impl Into<Cow<'a, str>>,
+		request_verification_token: impl Into<Cow<'a, str>>,
+		username: impl Into<Cow<'a, str>>,
+		passwd: impl Into<Cow<'a, str>>,
+		inst_code: impl Into<Cow<'a, str>>,
+		client_id: impl Into<Cow<'a, str>>,
+		is_temporary_login: bool,
+	) -> Self {
+		let return_url = return_url.into();
+		let request_verification_token = request_verification_token.into();
+		let username = username.into();
+		let passwd = passwd.into();
+		let inst_code = inst_code.into();
+		let client_id = client_id.into();
+
+		let is_temporary_login = if is_temporary_login {
+			"True".into()
+		} else {
+			"False".into()
+		};
+		let login_type = "InstituteLogin".into();
+
+		Self {
+			return_url,
+			request_verification_token,
+			username,
+			passwd,
+			inst_code,
+			login_type,
+			client_id,
+			is_temporary_login,
+		}
+	}
+	pub fn new(
+		return_url: impl Into<Cow<'a, str>>,
+		request_verification_token: impl Into<Cow<'a, str>>,
+		credentials: &'a Credentials,
+		client_id: impl Into<Cow<'a, str>>,
+		is_temporary_login: bool,
+	) -> Self {
+		let username = credentials.username();
+		let passwd = credentials.passwd();
+		let inst_id = credentials.inst_id();
+
+		Self::new_explicit(
+			return_url,
+			request_verification_token,
+			username,
+			passwd,
+			inst_id,
+			client_id,
+			is_temporary_login,
+		)
+	}
+}
 
 #[derive(Clone, Debug)]
 /// all the data we have when we successfully requested and parsed the authentication page

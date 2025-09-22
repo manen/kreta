@@ -2,7 +2,10 @@ use std::{borrow::Cow, collections::HashMap};
 
 use anyhow::{Context, anyhow};
 use base64::{Engine, prelude::BASE64_URL_SAFE_NO_PAD};
-use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
+use reqwest::{
+	StatusCode,
+	header::{HeaderMap, HeaderName, HeaderValue},
+};
 use scraper::{Html, Selector};
 use serde::{Deserialize, Serialize};
 use sha2::Digest;
@@ -15,8 +18,9 @@ pub struct LoginFlow {
 impl LoginFlow {
 	pub fn new() -> anyhow::Result<Self> {
 		let client = reqwest::Client::builder()
-			.redirect(reqwest::redirect::Policy::limited(1))
+			.redirect(reqwest::redirect::Policy::limited(5))
 			.https_only(true)
+			.cookie_store(true)
 			.user_agent("Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36")
 			.build()?;
 
@@ -98,10 +102,18 @@ impl LoginFlow {
 		let req = self
 			.client
 			.post("https://idp.e-kreta.hu/account/login")
+			// .post("https://adgadgadgadg.free.beeceptor.com/babab")
 			.form(map)
 			.build()?;
 		let resp = self.client.execute(req).await?;
-		let _ = resp.error_for_status()?;
+
+		let status_code = resp.status();
+		if !status_code.is_success() {
+			let body = resp.text().await?;
+			let err =
+				anyhow!("post_credentials received non-ok status code: {status_code}\n{body}");
+			return Err(err);
+		}
 
 		Ok(())
 	}

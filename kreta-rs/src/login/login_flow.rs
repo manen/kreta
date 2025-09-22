@@ -1,14 +1,14 @@
-use std::{borrow::Cow, collections::HashMap};
+use std::borrow::Cow;
 
 use anyhow::{Context, anyhow};
 use base64::{Engine, prelude::BASE64_URL_SAFE_NO_PAD};
 use scraper::{Html, Selector};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use sha2::Digest;
 
 pub const CLIENT_ID: &str = "kreta-ellenorzo-student-mobile-android";
 
-use super::credentials::Credentials;
+use super::{Credentials, Tokens};
 
 /// a login flow implementation that does not require the user to open kreta's website to log in;
 /// we kinda cheat our way around it by parsing the login page and filing the post request manually, as if it was sent from the browser
@@ -337,14 +337,4 @@ impl LoginFlow {
 
 		Ok(tokens)
 	}
-}
-
-#[derive(Clone, Debug, Deserialize)]
-pub struct Tokens {
-	id_token: String,
-	access_token: String,
-	expires_in: i32,
-	token_type: String,
-	refresh_token: String,
-	scope: String,
 }

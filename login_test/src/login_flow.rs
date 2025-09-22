@@ -12,6 +12,11 @@ use sha2::Digest;
 
 use crate::credentials::Credentials;
 
+/// a login flow implementation that does not require the user to open kreta's website to log in;
+/// we kinda cheat our way around it by parsing the login page and filing the post request manually, as if it was sent from the browser
+///
+/// it's unknown how stable this method will be in the future but for now it more than does the job \
+/// (i'll probably look into doing oauth the correct way but it's still a question whether kreta will accept any arbitrary redirect_uri or only the ones it likes)
 pub struct LoginFlow {
 	client: reqwest::Client,
 }

@@ -31,5 +31,9 @@ async fn start() -> anyhow::Result<()> {
 	let credentials = creds_from_file::read_from_file("./credentials.txt").await?;
 	let client = Client::full_login(&credentials).await?;
 
+	let timetable = client.timetable_full().await;
+
+	println!("{timetable:#?}");
+
 	Ok(())
 }

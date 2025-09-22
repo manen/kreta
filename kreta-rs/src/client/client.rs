@@ -6,12 +6,18 @@ use crate::login::{Credentials, LoginFlow, Tokens};
 /// an instance of this type has already logged in, but does not guarantee that the access token hasn't expired
 pub struct Client {
 	pub(crate) client: reqwest::Client,
+
+	pub(crate) inst_id: String,
 	pub(crate) tokens: Tokens,
 }
 
 impl Client {
-	pub fn new(client: reqwest::Client, tokens: Tokens) -> Self {
-		Self { client, tokens }
+	pub fn new(client: reqwest::Client, inst_id: String, tokens: Tokens) -> Self {
+		Self {
+			client,
+			inst_id,
+			tokens,
+		}
 	}
 
 	/// completes the entire login sequence using [LoginFlow]
@@ -24,7 +30,11 @@ impl Client {
 			let tokens = login_flow.request_token(&data).await?;
 
 			let client = login_flow.take_client();
-			let client = Client { client, tokens };
+			let client = Client {
+				client,
+				inst_id: credentials.inst_id().into(),
+				tokens,
+			};
 
 			Ok(client)
 		}

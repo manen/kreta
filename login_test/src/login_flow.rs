@@ -1,8 +1,13 @@
+use std::collections::HashMap;
+
 use anyhow::{Context, anyhow};
 use base64::{Engine, prelude::BASE64_URL_SAFE_NO_PAD};
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use scraper::{Html, Selector};
+use serde::{Deserialize, Serialize};
 use sha2::Digest;
+
+use crate::credentials::Credentials;
 
 pub struct LoginFlow {
 	client: reqwest::Client,
@@ -72,7 +77,31 @@ impl LoginFlow {
 
 		Ok(data)
 	}
+
+	pub async fn post_credentials(
+		&self,
+		begin_data: &BeginData,
+		credentials: &Credentials,
+	) -> anyhow::Result<()> {
+		let login_body = LoginBody {};
+
+		self.post_credentials_map(&login_body).await
+	}
+	pub async fn post_credentials_map<M: Serialize>(&self, map: &M) -> anyhow::Result<()> {
+		let req = self
+			.client
+			.post("https://idp.e-kreta.hu/account/login")
+			.form(map)
+			.build()?;
+		let resp = self.client.execute(req).await?;
+		let resp = resp.error_for_status()?;
+
+		Ok(())
+	}
 }
+
+#[derive(Clone, Debug, Serialize)]
+pub struct LoginBody {}
 
 #[derive(Clone, Debug)]
 /// all the data we have when we successfully requested and parsed the authentication page

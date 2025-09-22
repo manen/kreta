@@ -2,6 +2,7 @@ use anyhow::{Context, anyhow};
 
 use crate::login_flow::LoginFlow;
 
+pub mod credentials;
 pub mod login_flow;
 
 fn main() {

@@ -4,11 +4,11 @@ use serde::{Deserialize, Serialize};
 use super::Client;
 
 impl Client {
-	/// https://nzx.hu/kreta-api/mobileapi/getlessons
-	// pub fn orarend_elem(&self, date_from: &str, date_to: &str)
-	pub async fn timetable_full(&self) -> anyhow::Result<Vec<LessonRaw>> {
+	/// https://nzx.hu/kreta-api/mobileapi/getlessons \
+	/// from & to are both expected to be in the format of yyyy-mm-dd
+	pub async fn timetable(&self, from: &str, to: &str) -> anyhow::Result<Vec<LessonRaw>> {
 		let url = format!(
-			"https://{}.e-kreta.hu/ellenorzo/v3/sajat/OrarendElemek?datumTol=2025-09-22&datumIg=2025-09-28",
+			"https://{}.e-kreta.hu/ellenorzo/v3/sajat/OrarendElemek?datumTol={from}&datumIg={to}",
 			self.inst_id
 		);
 		let req = self

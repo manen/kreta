@@ -33,6 +33,8 @@ async fn start() -> anyhow::Result<()> {
 
 	let timetable = client.timetable_full().await;
 
+	// okay fetching works great i'll leave the fun part of putting the ical together for next time
+
 	println!("{timetable:#?}");
 
 	Ok(())

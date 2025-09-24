@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use kreta_rs::{client::Client, login::LoginFlow};
 
 mod creds_from_file;

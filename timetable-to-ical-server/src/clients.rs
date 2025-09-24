@@ -1,14 +1,7 @@
-use std::{
-	collections::HashMap,
-	ops::{Deref, DerefMut},
-	sync::Arc,
-};
+use std::{collections::HashMap, sync::Arc};
 
-use kreta_rs::{
-	client::Client,
-	login::{Credentials, credentials},
-};
-use tokio::sync::{Mutex, MutexGuard};
+use kreta_rs::{client::Client, login::Credentials};
+use tokio::sync::Mutex;
 
 #[derive(Default)]
 /// essentially a client cache

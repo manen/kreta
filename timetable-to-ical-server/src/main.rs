@@ -2,7 +2,7 @@ use actix_web::{App, HttpResponse, HttpServer, Responder, get, web};
 use anyhow::{Context, anyhow};
 use base64::Engine;
 use chrono::Utc;
-use kreta_rs::login::{Credentials, credentials};
+use kreta_rs::login::Credentials;
 use tokio::sync::Mutex;
 
 use crate::clients::Clients;

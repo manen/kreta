@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use ics::{
 	Event, ICalendar,
-	properties::{Comment, Description, DtEnd, DtStart, Location, Summary},
+	properties::{Description, DtEnd, DtStart, Location, Summary},
 };
 use kreta_rs::client::timetable::LessonRaw;
 

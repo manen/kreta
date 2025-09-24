@@ -2,7 +2,7 @@ use std::time::{Duration, Instant};
 
 use anyhow::Context;
 
-use crate::login::{Credentials, LoginFlow, TokensRaw, credentials};
+use crate::login::{Credentials, LoginFlow, TokensRaw};
 
 /// the main client interface with which you can interact with the kreta api. \
 /// an instance of this type has already logged in, but does not guarantee that the access token hasn't expired

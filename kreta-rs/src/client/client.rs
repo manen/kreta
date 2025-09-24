@@ -1,3 +1,5 @@
+use std::time::{Duration, Instant};
+
 use anyhow::Context;
 
 use crate::login::{Credentials, LoginFlow, TokensRaw};
@@ -9,14 +11,21 @@ pub struct Client {
 
 	pub(crate) inst_id: String,
 	pub(crate) tokens: TokensRaw,
+
+	pub(crate) access_expires: Instant,
 }
 
 impl Client {
+	/// refresh_if_needed won't work as expected if you wait a lot between getting your tokens and calling Client::new \
+	/// you should probably use [Client::full_login] anyways
 	pub fn new(client: reqwest::Client, inst_id: String, tokens: TokensRaw) -> Self {
+		let access_expires = Instant::now() + Duration::from_secs(tokens.expires_in.abs() as _);
+
 		Self {
 			client,
 			inst_id,
 			tokens,
+			access_expires,
 		}
 	}
 
@@ -27,13 +36,16 @@ impl Client {
 
 			let data = login_flow.begin().await?;
 			login_flow.post_credentials(&data, credentials).await?;
+
 			let tokens = login_flow.request_token(&data).await?;
+			let access_expires = Instant::now() + Duration::from_secs(tokens.expires_in.abs() as _);
 
 			let client = login_flow.take_client();
 			let client = Client {
 				client,
 				inst_id: credentials.inst_id().into(),
 				tokens,
+				access_expires,
 			};
 
 			Ok(client)

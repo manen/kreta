@@ -71,4 +71,13 @@ impl crate::client::Client {
 
 		Ok(())
 	}
+
+	pub async fn refresh_if_needed(&mut self) -> anyhow::Result<()> {
+		use std::time::Instant;
+
+		if self.access_expires <= Instant::now() {
+			self.refresh().await?;
+		}
+		Ok(())
+	}
 }

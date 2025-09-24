@@ -32,7 +32,7 @@ async fn start() -> anyhow::Result<()> {
 	let client = Client::full_login(&credentials).await?;
 
 	let timetable = client.timetable("2025-09-01", "2025-10-01").await?;
-	let calendar = timetable_to_ical::lessons_to_calendar_file(&timetable);
+	let calendar = timetable_to_ical::lessons_to_calendar_file(&timetable, &Default::default());
 
 	tokio::fs::write("./timetable.ical", &calendar).await?;
 

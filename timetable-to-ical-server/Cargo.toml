@@ -1,0 +1,9 @@
+[package]
+name = "timetable-to-ical-server"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+actix-web = { version = "4.11.0", features = ["rustls"] }
+anyhow.workspace = true
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }

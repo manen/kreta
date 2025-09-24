@@ -5,5 +5,5 @@ edition = "2024"
 
 [dependencies]
 anyhow.workspace = true
-kreta-rs.workspace = true
+kreta-rs = { workspace = true, features = ["client"] }
 tokio = { workspace = true, features = ["rt", "fs"] }

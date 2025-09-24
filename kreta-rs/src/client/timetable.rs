@@ -1,8 +1,10 @@
 use anyhow::{Context, anyhow};
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "client")]
 use super::Client;
 
+#[cfg(feature = "client")]
 impl Client {
 	/// https://nzx.hu/kreta-api/mobileapi/getlessons \
 	/// from & to are both expected to be in the format of yyyy-mm-dd

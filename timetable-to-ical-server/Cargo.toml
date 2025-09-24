@@ -11,3 +11,4 @@ chrono.workspace = true
 
 kreta-rs = { workspace = true, features = ["client"] }
 timetable-to-ical.workspace = true
+base64.workspace = true

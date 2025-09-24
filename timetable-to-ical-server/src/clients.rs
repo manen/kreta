@@ -33,7 +33,11 @@ impl Clients {
 		&mut self,
 		credentials: &Credentials,
 	) -> anyhow::Result<Arc<Mutex<Client>>> {
-		let saved = self.get_client(credentials.username());
+		// println!("{:#?}", self.map.len());
+
+		// println!("retrieving client for {}", credentials.username());
+		let saved = self.map.get(credentials.username()).cloned();
+		// println!("saved: {}", saved.is_some());
 		if let Some(saved) = saved {
 			let mut client = saved.lock().await;
 
@@ -53,6 +57,7 @@ impl Clients {
 		let client = Arc::new(Mutex::new(client));
 		self.map
 			.insert(credentials.username().into(), client.clone());
+		// println!("just saved client for {}", credentials.username());
 		Ok(client)
 	}
 }

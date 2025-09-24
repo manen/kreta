@@ -2,7 +2,7 @@ use std::time::{Duration, Instant};
 
 use anyhow::Context;
 
-use crate::login::{Credentials, LoginFlow, TokensRaw};
+use crate::login::{Credentials, LoginFlow, TokensRaw, credentials};
 
 /// the main client interface with which you can interact with the kreta api. \
 /// an instance of this type has already logged in, but does not guarantee that the access token hasn't expired
@@ -31,6 +31,7 @@ impl Client {
 
 	/// completes the entire login sequence using [LoginFlow]
 	pub async fn full_login(credentials: &Credentials) -> anyhow::Result<Self> {
+		println!("performing full login for {}", credentials.username());
 		async fn internal(credentials: &Credentials) -> anyhow::Result<Client> {
 			let login_flow = LoginFlow::new()?;
 

@@ -1,6 +1,8 @@
 use actix_web::{App, HttpResponse, HttpServer, Responder, get, web};
+use anyhow::{Context, anyhow};
+use base64::Engine;
 use chrono::Utc;
-use kreta_rs::login::Credentials;
+use kreta_rs::login::{Credentials, credentials};
 use tokio::sync::Mutex;
 
 use crate::clients::Clients;
@@ -13,12 +15,67 @@ async fn index() -> impl Responder {
 }
 
 #[get("/basic/{inst_id}/{username}/{passwd}/timetable.ical")]
-async fn timetable(
+async fn timetable_basic(
 	path: web::Path<(String, String, String)>,
 	clients: web::Data<Mutex<Clients>>,
 ) -> impl Responder {
+	let output_calendar = timetable_generic(path.into_inner(), clients).await;
+
+	let resp = HttpResponse::Ok()
+		.content_type("text/calendar")
+		.body(output_calendar);
+	resp
+}
+#[get("/base64/{blob}/timetable.ical")]
+async fn timetable_base64(
+	path: web::Path<String>,
+	clients: web::Data<Mutex<Clients>>,
+) -> impl Responder {
 	let res = async move || {
-		let (inst_id, username, passwd) = path.into_inner();
+		let blob = path.into_inner();
+		let blob = base64::prelude::BASE64_URL_SAFE
+			.decode(&blob)
+			.with_context(|| "while decoding the base64 blob provided")?;
+		let blob = String::from_utf8(blob).with_context(|| "base64 encoded blob is not utf-8")?;
+
+		let mut credentials = blob.split('\n').map(String::from);
+		let username = credentials
+			.next()
+			.ok_or_else(|| anyhow!("invalid syntax for the base64 blob: first line is username"))?;
+		let passwd = credentials.next().ok_or_else(|| {
+			anyhow!("invalid syntax for the base64 blob: second line is password")
+		})?;
+		let inst_id = credentials.next().ok_or_else(|| {
+			anyhow!("invalid syntax for the base64 blob: third line is institute id")
+		})?;
+
+		let timetable = timetable_generic_res((inst_id, username, passwd), clients).await?;
+
+		anyhow::Ok(timetable)
+	};
+	let res = res().await;
+
+	let output_calendar = timetable_to_ical::err::result_as_timetable(res);
+
+	let resp = HttpResponse::Ok()
+		.content_type("text/calendar")
+		.body(output_calendar);
+	resp
+}
+
+async fn timetable_generic(
+	creds: (String, String, String),
+	clients: web::Data<Mutex<Clients>>,
+) -> String {
+	let res = timetable_generic_res(creds, clients).await;
+	let output_calendar = timetable_to_ical::err::result_as_timetable(res);
+	output_calendar
+}
+async fn timetable_generic_res(
+	(inst_id, username, passwd): (String, String, String),
+	clients: web::Data<Mutex<Clients>>,
+) -> anyhow::Result<String> {
+	let res = async move || {
 		let credentials = Credentials::new(inst_id, username, passwd);
 
 		let client = {
@@ -35,13 +92,7 @@ async fn timetable(
 		anyhow::Ok(timetable)
 	};
 	let res = res().await;
-
-	let output_calendar = timetable_to_ical::err::result_as_timetable(res);
-
-	let resp = HttpResponse::Ok()
-		.content_type("text/calendar")
-		.body(output_calendar);
-	resp
+	res
 }
 
 /// one month range centered on today
@@ -60,11 +111,14 @@ fn one_month_range() -> (String, String) {
 const BIND: (&str, u16) = ("0.0.0.0", 8080);
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+	let clients = web::Data::new(Mutex::new(Clients::default()));
+
 	let server = HttpServer::new(move || {
 		App::new()
-			.app_data(web::Data::new(Mutex::new(Clients::default())))
+			.app_data(clients.clone())
 			.service(index)
-			.service(timetable)
+			.service(timetable_basic)
+			.service(timetable_base64)
 	})
 	.bind(BIND)?
 	.run();

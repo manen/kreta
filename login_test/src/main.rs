@@ -13,6 +13,18 @@ fn main() {
 	rt.block_on(start()).unwrap()
 }
 
+async fn start() -> anyhow::Result<()> {
+	let credentials = creds_from_file::read_from_file("./credentials.txt").await?;
+
+	let mut client = Client::full_login(&credentials).await?;
+	tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+
+	client.refresh().await?;
+	println!("refreshing works");
+
+	Ok(())
+}
+
 async fn execute_login_flow() -> anyhow::Result<()> {
 	let credentials = creds_from_file::read_from_file("./credentials.txt").await?;
 
@@ -27,7 +39,7 @@ async fn execute_login_flow() -> anyhow::Result<()> {
 	Ok(())
 }
 
-async fn start() -> anyhow::Result<()> {
+async fn gen_timetable() -> anyhow::Result<()> {
 	let credentials = creds_from_file::read_from_file("./credentials.txt").await?;
 	let client = Client::full_login(&credentials).await?;
 

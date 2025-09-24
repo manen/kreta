@@ -1,6 +1,6 @@
 use anyhow::Context;
 
-use crate::login::{Credentials, LoginFlow, Tokens};
+use crate::login::{Credentials, LoginFlow, TokensRaw};
 
 /// the main client interface with which you can interact with the kreta api. \
 /// an instance of this type has already logged in, but does not guarantee that the access token hasn't expired
@@ -8,11 +8,11 @@ pub struct Client {
 	pub(crate) client: reqwest::Client,
 
 	pub(crate) inst_id: String,
-	pub(crate) tokens: Tokens,
+	pub(crate) tokens: TokensRaw,
 }
 
 impl Client {
-	pub fn new(client: reqwest::Client, inst_id: String, tokens: Tokens) -> Self {
+	pub fn new(client: reqwest::Client, inst_id: String, tokens: TokensRaw) -> Self {
 		Self {
 			client,
 			inst_id,

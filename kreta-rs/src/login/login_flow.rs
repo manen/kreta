@@ -8,7 +8,7 @@ use sha2::Digest;
 
 pub const CLIENT_ID: &str = "kreta-ellenorzo-student-mobile-android";
 
-use super::{Credentials, Tokens};
+use super::{Credentials, TokensRaw};
 
 /// a login flow implementation that does not require the user to open kreta's website to log in;
 /// we kinda cheat our way around it by parsing the login page and filing the post request manually, as if it was sent from the browser
@@ -297,7 +297,7 @@ impl LoginFlow {
 		Ok(code.into())
 	}
 
-	pub async fn request_token(&self, begin_data: &BeginData) -> anyhow::Result<Tokens> {
+	pub async fn request_token(&self, begin_data: &BeginData) -> anyhow::Result<TokensRaw> {
 		let code = self.resolve_return_url_code(begin_data).await?;
 		let grant_type = "authorization_code";
 		let redirect_uri = "https://mobil.e-kreta.hu/ellenorzo-student/prod/oauthredirect";
@@ -313,7 +313,7 @@ impl LoginFlow {
 
 		self.request_token_map(&connect_token_body).await
 	}
-	pub async fn request_token_map<S: Serialize>(&self, map: &S) -> anyhow::Result<Tokens> {
+	pub async fn request_token_map<S: Serialize>(&self, map: &S) -> anyhow::Result<TokensRaw> {
 		let req = self
 			.client
 			.post("https://idp.e-kreta.hu/connect/token")
@@ -333,7 +333,7 @@ impl LoginFlow {
 			return Err(err);
 		}
 
-		let tokens: Tokens = resp.json().await.with_context(|| {
+		let tokens: TokensRaw = resp.json().await.with_context(|| {
 			format!(
 				"everything went fine but the body of the /connect/token endpoint isn't valid json"
 			)

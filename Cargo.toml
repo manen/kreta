@@ -9,7 +9,7 @@ timetable-to-ical.path = "./timetable-to-ical"
 anyhow = "1.0.100"
 base64 = "0.22.1"
 rand = "0.9.2"
-reqwest = "0.12.23"
+reqwest = { version = "0.12.23", default-features = false, features = ["rustls-tls"] }
 scraper = "0.24.0"
 serde = { version = "1.0.226", features = ["derive"] }
 sha2 = "0.10.9"

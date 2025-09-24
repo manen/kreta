@@ -62,11 +62,14 @@ impl crate::client::Client {
 
 	pub async fn refresh(&mut self) -> anyhow::Result<()> {
 		use anyhow::Context;
+		use std::time::{Duration, Instant};
 
 		let tokens = self
 			.refresh_new()
 			.await
 			.with_context(|| "while getting new access token (Client.refresh())")?;
+
+		self.access_expires = Instant::now() + Duration::from_secs(tokens.expires_in.abs() as _);
 		self.tokens = tokens;
 
 		Ok(())

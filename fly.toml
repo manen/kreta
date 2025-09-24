@@ -6,9 +6,6 @@
 app = 'timetable-to-ical'
 primary_region = 'fra'
 
-[build]
-  builder = 'paketobuildpacks/builder:base'
-
 [env]
   PORT = '8080'
 

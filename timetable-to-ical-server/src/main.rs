@@ -8,11 +8,7 @@ use tokio::sync::Mutex;
 use crate::clients::Clients;
 
 pub mod clients;
-
-#[get("/")]
-async fn index() -> impl Responder {
-	"szia"
-}
+pub mod landing;
 
 #[get("/basic/{inst_id}/{username}/{passwd}/timetable.ical")]
 async fn timetable_basic(
@@ -116,7 +112,8 @@ async fn main() -> anyhow::Result<()> {
 	let server = HttpServer::new(move || {
 		App::new()
 			.app_data(clients.clone())
-			.service(index)
+			.service(landing::index)
+			.service(landing::styles)
 			.service(timetable_basic)
 			.service(timetable_base64)
 	})

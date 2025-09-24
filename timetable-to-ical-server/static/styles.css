@@ -1,0 +1,42 @@
+body {
+	background-color: white;
+	color: black;
+}
+
+@media (prefers-color-scheme: dark) {
+	body {
+		background-color: #121212;
+		color: #e0e0e0;
+	}
+
+	a {
+		color: #bb86fc;
+	}
+}
+
+/* -- */
+
+.title {
+	text-align: center;
+}
+
+p {
+	font-size: 1rem;
+}
+
+#login-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	row-gap: 1rem;
+	column-gap: 1rem;
+
+	margin-bottom: 1rem;
+}
+.form-text {
+	width: 40ch;
+	padding: 0.5rem;
+}
+
+button {
+	padding: 0.6rem;
+}

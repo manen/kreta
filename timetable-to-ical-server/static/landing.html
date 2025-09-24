@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="stylesheet" href="/styles.css" />
+		<title>kreta -> naptar</title>
+	</head>
+	<body>
+		<code class="title">
+			<h1 class="title-inner">timetable-to-ical</h1>
+		</code>
+
+		<p>
+			a <code>timetable-to-ical</code> használatával pár gombnyomással
+			importálhatod a valós idejű órarendedet a krétádból a naptáradba.
+			funkciók:
+		</p>
+		<ul>
+			<li>óra nevének mutatása</li>
+			<li>terem neve/száma</li>
+			<li>órát tartó tanár neve</li>
+			<li>óra témája</li>
+
+			<li>helyettesítés, bejelentett dolgozat jelzése emojival</li>
+			<li>óráról késés, hiányzás jelzése emojival</li>
+		</ul>
+
+		<p>
+			az egész projekt rust-ban készült, a forráskód fejestül mindenestül
+			elérhető a <a href="https://github.com/manen/kreta">githubomon</a>.
+		</p>
+
+		<hr />
+
+		<p>hozzáadás a naptárhoz:</p>
+		<form id="loginForm">
+			<div id="login-grid">
+				<label> Felhasználónév / Oktatási azonosító (7xxxxxxxxxx): </label>
+				<input type="text" id="username" required pattern="7\d*" />
+				<label> Jelszó: </label>
+				<input type="password" id="password" required />
+				<label> Intézmény azonosítója (https://xxxxxxx.e-kreta.hu): </label>
+				<input type="text" id="institution" required />
+			</div>
+
+			<button type="submit">órarend hozzáadása a naptárhoz</button>
+
+			<script>
+				const form = document.getElementById("loginForm");
+
+				form.addEventListener("submit", (event) => {
+					event.preventDefault();
+
+					const username = document.getElementById("username").value;
+					const password = document.getElementById("password").value;
+					const inst_id = document.getElementById("institution").value;
+
+					const blob_data = `${username}\n${password}\n${inst_id}`;
+
+					const bytes = new TextEncoder().encode(blob_data);
+					let base64 = btoa(String.fromCharCode(...bytes));
+					base64 = base64.replace(/\+/g, "-").replace(/\//g, "_");
+
+					const url = `${window.location.hostname}/base64/${base64}/timetable.ical`;
+					const webcal_url = `webcal://${url}`;
+					window.open(webcal_url, "_blank");
+
+					const output = document.getElementById("output");
+					output.innerHTML = `
+					<p>
+						elvileg most megnyílt a naptárad és hozzá tudod adni subscription calendar-ként az órarended. ha nem,
+						a naptár alkalmazásodban az alábbi linket megadva tudod importálni az órarended:
+					</p>
+
+					<code>
+						${webcal_url}
+					</code>
+
+					<p>
+						ezt a linket ne oszd meg senkivel! titkosítatlanul benne vannak a kréta bejelentkezési adataid, így ha bárki megszerzi, meg tudja nézni
+						a jegyeid vagy nemtom (kb az a legrosszabb amit egy kréta loginnal lehet csinálni, de attólmég tarsd meg magadnak)
+					</p>
+					`;
+				});
+			</script>
+		</form>
+
+		<div id="output"></div>
+	</body>
+</html>

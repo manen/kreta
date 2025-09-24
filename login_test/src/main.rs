@@ -31,8 +31,13 @@ async fn start() -> anyhow::Result<()> {
 	let credentials = creds_from_file::read_from_file("./credentials.txt").await?;
 	let client = Client::full_login(&credentials).await?;
 
+	let opts = timetable_to_ical::Options {
+		pretty_print_as_desc: true,
+		..Default::default()
+	};
+
 	let timetable = client.timetable("2025-09-01", "2025-10-01").await?;
-	let calendar = timetable_to_ical::lessons_to_calendar_file(&timetable, &Default::default());
+	let calendar = timetable_to_ical::lessons_to_calendar_file(&timetable, &opts);
 
 	tokio::fs::write("./timetable.ical", &calendar).await?;
 

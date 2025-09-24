@@ -2,20 +2,27 @@ use std::borrow::Cow;
 
 use ics::{
 	Event, ICalendar,
-	properties::{DtEnd, DtStart, Location, Summary},
+	properties::{Comment, Description, DtEnd, DtStart, Location, Summary},
 };
 use kreta_rs::client::timetable::LessonRaw;
 
 #[derive(Clone, Debug)]
 pub struct Options {
 	pub lowercase_subject_names: bool,
+	pub teacher_name_in_location: bool,
+
 	pub substitution_prefix: Cow<'static, str>,
 	pub announced_exam_prefix: Cow<'static, str>,
+
+	/// includes a pretty print (basic rust {:#?}) of the entire [LessonRaw] as notes
+	pub pretty_print_as_desc: bool,
 }
 impl Default for Options {
 	fn default() -> Self {
 		Self {
 			lowercase_subject_names: true,
+			teacher_name_in_location: true,
+			pretty_print_as_desc: false,
 			substitution_prefix: "🔄".into(),
 			announced_exam_prefix: "📝".into(),
 		}
@@ -57,12 +64,30 @@ pub fn map_lessons_to_events<'a, I: IntoIterator<Item = &'a LessonRaw>>(
 			}
 		};
 
+		let location: Cow<'a, str> = {
+			let room_name = &lesson.room_name;
+			if opts.teacher_name_in_location {
+				let teachers_name = match &lesson.substitute_teacher_name {
+					Some(a) => a,
+					None => &lesson.teachers_name,
+				};
+				format!("{room_name} - {teachers_name}").into()
+			} else {
+				room_name.into()
+			}
+		};
+
 		let mut event = Event::new(uid, &lesson.start_time);
 		event.push(Summary::new(name));
-		// event.push(Comment::new(format!("{lesson:#?}")));
 		event.push(DtStart::new(start_escaped));
 		event.push(DtEnd::new(end_escaped));
-		event.push(Location::new(&lesson.room_name));
+		event.push(Location::new(location));
+
+		if opts.pretty_print_as_desc {
+			let desc = format!("{lesson:#?}");
+			let desc = escape_desc_text(&desc);
+			event.push(Description::new(desc));
+		}
 
 		event
 	})
@@ -88,4 +113,14 @@ pub fn lessons_to_calendar_file<'a, I: IntoIterator<Item = &'a LessonRaw>>(
 ) -> String {
 	let calendar = lessons_to_calendar(iter, opts);
 	calendar.to_string()
+}
+
+// -- utils
+
+fn escape_desc_text(input: &str) -> String {
+	input
+		.replace('\\', "\\\\")
+		.replace(';', "\\;")
+		.replace(',', "\\,")
+		.replace('\n', "\\n")
 }

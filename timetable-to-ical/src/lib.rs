@@ -6,6 +6,11 @@ use ics::{
 };
 use kreta_rs::client::timetable::LessonRaw;
 
+pub mod absence_best_guess;
+use absence_best_guess::absence_guess;
+
+use crate::absence_best_guess::Absence;
+
 #[derive(Clone, Debug)]
 pub struct Options {
 	pub lowercase_subject_names: bool,
@@ -14,6 +19,8 @@ pub struct Options {
 
 	pub substitution_prefix: Cow<'static, str>,
 	pub announced_exam_prefix: Cow<'static, str>,
+	pub absence_prefix: Cow<'static, str>,
+	pub student_late_prefix: Cow<'static, str>,
 
 	/// includes a pretty print (basic rust {:#?}) of the entire [LessonRaw] as notes
 	pub pretty_print_as_desc: bool,
@@ -27,6 +34,8 @@ impl Default for Options {
 			pretty_print_as_desc: false,
 			substitution_prefix: "🔄".into(),
 			announced_exam_prefix: "📝".into(),
+			absence_prefix: "🚫".into(),
+			student_late_prefix: "⏰".into(),
 		}
 	}
 }
@@ -50,6 +59,20 @@ pub fn map_lessons_to_events<'a, I: IntoIterator<Item = &'a LessonRaw>>(
 			};
 
 			let mut name_prefixes = String::new();
+			let absence = absence_guess(&lesson.student_presence.name);
+			match absence {
+				Absence::Absent => {
+					if opts.absence_prefix.len() > 0 {
+						name_prefixes.push_str(&opts.absence_prefix);
+					}
+				}
+				Absence::Late => {
+					if opts.student_late_prefix.len() > 0 {
+						name_prefixes.push_str(&opts.student_late_prefix);
+					}
+				}
+				_ => {}
+			}
 			if lesson.announced_exam_uid.is_some() && opts.announced_exam_prefix.len() > 0 {
 				name_prefixes.push_str(&opts.announced_exam_prefix);
 			}

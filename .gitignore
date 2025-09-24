@@ -5,3 +5,4 @@ __pycache__
 thankss.py
 credentials.txt
 timetable.ical
+*.log

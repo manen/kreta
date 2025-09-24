@@ -9,6 +9,7 @@ use kreta_rs::client::timetable::LessonRaw;
 #[derive(Clone, Debug)]
 pub struct Options {
 	pub lowercase_subject_names: bool,
+	pub lesson_topic_in_name: bool,
 	pub teacher_name_in_location: bool,
 
 	pub substitution_prefix: Cow<'static, str>,
@@ -21,6 +22,7 @@ impl Default for Options {
 	fn default() -> Self {
 		Self {
 			lowercase_subject_names: true,
+			lesson_topic_in_name: true,
 			teacher_name_in_location: true,
 			pretty_print_as_desc: false,
 			substitution_prefix: "🔄".into(),
@@ -55,11 +57,24 @@ pub fn map_lessons_to_events<'a, I: IntoIterator<Item = &'a LessonRaw>>(
 				name_prefixes.push_str(&opts.substitution_prefix);
 			}
 
-			match name_prefixes.len() {
-				0 => name_base,
-				1.. => {
-					name_prefixes.push(' ');
-					format!("{name_prefixes}{name_base}").into()
+			let name_suffixes = if lesson.topic.is_some() && opts.lesson_topic_in_name {
+				let topic = lesson
+					.topic
+					.as_ref()
+					.expect("we just checked that topic.is_some() == true");
+				format!(" - {topic}")
+			} else {
+				String::new()
+			};
+
+			match (name_prefixes.len(), name_suffixes.len()) {
+				(0, 0) => name_base,
+				(p, _) => {
+					if p > 0 {
+						name_prefixes.push(' ');
+					}
+
+					format!("{name_prefixes}{name_base}{name_suffixes}").into()
 				}
 			}
 		};

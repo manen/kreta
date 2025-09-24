@@ -32,7 +32,6 @@ async fn start() -> anyhow::Result<()> {
 	let client = Client::full_login(&credentials).await?;
 
 	let opts = timetable_to_ical::Options {
-		pretty_print_as_desc: true,
 		..Default::default()
 	};
 

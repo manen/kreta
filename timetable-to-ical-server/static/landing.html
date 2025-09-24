@@ -62,7 +62,7 @@
 					let base64 = btoa(String.fromCharCode(...bytes));
 					base64 = base64.replace(/\+/g, "-").replace(/\//g, "_");
 
-					const url = `${window.location.hostname}/base64/${base64}/timetable.ical`;
+					const url = `${window.location.host}/base64/${base64}/timetable.ical`;
 					const webcal_url = `webcal://${url}`;
 					window.open(webcal_url, "_blank");
 

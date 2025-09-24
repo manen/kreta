@@ -104,7 +104,10 @@ fn one_month_range() -> (String, String) {
 	)
 }
 
-const BIND: (&str, u16) = ("0.0.0.0", 8080);
+const BIND: (&str, u16) = const {
+	let port = if cfg!(debug_assertions) { 8080 } else { 18080 };
+	("0.0.0.0", port)
+};
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
 	let clients = web::Data::new(Mutex::new(Clients::default()));

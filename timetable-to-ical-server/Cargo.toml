@@ -7,3 +7,7 @@ edition = "2024"
 actix-web = { version = "4.11.0", features = ["rustls"] }
 anyhow.workspace = true
 tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
+chrono.workspace = true
+
+kreta-rs = { workspace = true, features = ["client"] }
+timetable-to-ical.workspace = true

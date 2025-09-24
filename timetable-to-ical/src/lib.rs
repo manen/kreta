@@ -9,6 +9,8 @@ use kreta_rs::client::timetable::LessonRaw;
 pub mod absence_best_guess;
 use absence_best_guess::absence_guess;
 
+pub mod err;
+
 use crate::absence_best_guess::Absence;
 
 #[derive(Clone, Debug)]

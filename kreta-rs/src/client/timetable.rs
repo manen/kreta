@@ -40,78 +40,78 @@ impl Client {
 /// represents a lesson returned by https://[instituteCode].e-kreta.hu/ellenorzo/v3/sajat/OrarendElem
 pub struct LessonRaw {
 	#[serde(rename = "Uid")]
-	uid: String,
+	pub uid: String,
 	#[serde(rename = "Datum")]
-	date: String,
+	pub date: String,
 	#[serde(rename = "KezdetIdopont")]
-	start_time: String,
+	pub start_time: String,
 	#[serde(rename = "VegIdopont")]
-	end_time: String,
+	pub end_time: String,
 	#[serde(rename = "Nev")]
-	name: String,
+	pub name: String,
 
 	#[serde(rename = "Oraszam")]
-	oraszam: i32,
+	pub oraszam: i32,
 	#[serde(rename = "OraEvesSorszama")]
-	ora_eves_sorszama: i32,
+	pub ora_eves_sorszama: Option<i32>,
 
 	#[serde(rename = "OsztalyCsoport")]
-	class_group: ClassGroupRaw,
+	pub class_group: ClassGroupRaw,
 	#[serde(rename = "TanarNeve")]
-	teachers_name: String,
+	pub teachers_name: String,
 	#[serde(rename = "Tantargy")]
-	class: ClassRaw,
+	pub class: ClassRaw,
 	#[serde(rename = "Tema")]
-	topic: Option<String>,
+	pub topic: Option<String>,
 	#[serde(rename = "TeremNeve")]
-	room_name: String,
+	pub room_name: String,
 
 	#[serde(rename = "Tipus")]
-	lesson_type: UidNameAndDescRaw,
+	pub lesson_type: UidNameAndDescRaw,
 	#[serde(rename = "TanuloJelenlet")]
-	student_presence: UidNameAndDescRaw,
+	pub student_presence: UidNameAndDescRaw,
 	#[serde(rename = "Allapot")]
-	status: UidNameAndDescRaw,
+	pub status: UidNameAndDescRaw,
 
 	#[serde(rename = "HelyettesTanarNeve")]
-	substitute_teacher_name: Option<String>,
+	pub substitute_teacher_name: Option<String>,
 	#[serde(rename = "HaziFeladatUid")]
-	homework_uid: Option<String>,
+	pub homework_uid: Option<String>,
 	#[serde(rename = "BejelentettSzamonkeresUid")]
-	announced_exam_uid: Option<String>,
+	pub announced_exam_uid: Option<String>,
 
 	#[serde(rename = "Letrehozas")]
-	created_at: String,
+	pub created_at: String,
 	#[serde(rename = "UtolsoModositas")]
-	last_modified: String,
+	pub last_modified: String,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ClassGroupRaw {
 	#[serde(rename = "Uid")]
-	uid: String,
+	pub uid: String,
 	#[serde(rename = "Nev")]
-	name: String,
+	pub name: String,
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ClassRaw {
 	#[serde(rename = "Uid")]
-	uid: String,
+	pub uid: String,
 	#[serde(rename = "Nev")]
-	name: String,
+	pub name: String,
 	#[serde(rename = "Kategoria")]
-	category: UidNameAndDescRaw,
+	pub category: UidNameAndDescRaw,
 	#[serde(rename = "SortIndex")]
-	sort_index: i32,
+	pub sort_index: i32,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 /// seems to be a reused data structure in the timetable responses
 pub struct UidNameAndDescRaw {
 	#[serde(rename = "Uid")]
-	uid: String,
+	pub uid: String,
 	#[serde(rename = "Nev")]
-	name: String,
+	pub name: String,
 	#[serde(rename = "Leiras")]
-	desc: String,
+	pub desc: String,
 }

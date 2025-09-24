@@ -1,9 +1,10 @@
 [workspace]
 resolver = "3"
-members = [ "kreta-rs","login_test"]
+members = [ "kreta-rs","login_test", "timetable-to-ical"]
 
 [workspace.dependencies]
-kreta-rs.path = "./kreta-rs"
+kreta-rs = { path = "./kreta-rs", default-features = false }
+timetable-to-ical.path = "./timetable-to-ical"
 
 anyhow = "1.0.100"
 base64 = "0.22.1"

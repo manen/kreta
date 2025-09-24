@@ -31,11 +31,11 @@ async fn start() -> anyhow::Result<()> {
 	let credentials = creds_from_file::read_from_file("./credentials.txt").await?;
 	let client = Client::full_login(&credentials).await?;
 
-	let timetable = client.timetable_full().await;
+	let timetable = client.timetable("2025-09-01", "2025-10-01").await?;
+	let calendar = timetable_to_ical::lessons_to_calendar_file(&timetable);
 
-	// okay fetching works great i'll leave the fun part of putting the ical together for next time
+	tokio::fs::write("./timetable.ical", &calendar).await?;
 
-	println!("{timetable:#?}");
-
+	println!("all done");
 	Ok(())
 }

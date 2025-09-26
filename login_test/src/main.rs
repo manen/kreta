@@ -12,7 +12,7 @@ fn main() {
 		.build()
 		.unwrap();
 
-	rt.block_on(start()).unwrap()
+	rt.block_on(gen_timetable()).unwrap()
 }
 
 async fn start() -> anyhow::Result<()> {

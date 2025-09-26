@@ -50,6 +50,16 @@ pub fn map_lessons_to_events<'a, I: IntoIterator<Item = &'a LessonRaw>>(
 		let uid = uuid::Uuid::new_v4();
 		let uid = format!("{uid}");
 
+		let dtstamp = match lesson.start_time.split('T').nth(0) {
+			Some(a) => a,
+			None => {
+				eprintln!("invalid lesson.start_time received: {}", lesson.start_time);
+				&lesson.date
+			}
+		};
+		let mut dtstamp = dtstamp.replace('-', "");
+		dtstamp.push_str("T000000Z");
+
 		let start_escaped = lesson.start_time.replace('-', "").replace(':', "");
 		let end_escaped = lesson.end_time.replace('-', "").replace(':', "");
 
@@ -117,7 +127,7 @@ pub fn map_lessons_to_events<'a, I: IntoIterator<Item = &'a LessonRaw>>(
 			}
 		};
 
-		let mut event = Event::new(uid, &lesson.start_time);
+		let mut event = Event::new(uid, dtstamp);
 		event.push(Summary::new(name));
 		event.push(DtStart::new(start_escaped));
 		event.push(DtEnd::new(end_escaped));

@@ -6,14 +6,13 @@ pub enum Absence {
 }
 
 pub fn absence_guess(name: &str) -> Absence {
-	// a helyzet hogy nincs egy darab rendes hianyzasom eddig az evben szoval nemtom hogy a rendes hianyzast
-	// minek hivja az api, ha ezt olvasod es tudod akk megkoszonom ha nyitsz egy pull requestet es ide beirod :)
-
+	// self-explanatory
 	match name {
 		"Jelenlet" => Absence::Present,
 		// Na: nem definialt, the lesson hasn't happened yet
 		"Na" => Absence::Present,
 		"Keses" => Absence::Late,
+		"Hianyzas" => Absence::Absent,
 		_ => Absence::Absent,
 	}
 }

@@ -1,5 +1,6 @@
 use std::{collections::HashMap, sync::Arc};
 
+use anyhow::anyhow;
 use kreta_rs::{client::Client, login::Credentials};
 use tokio::sync::Mutex;
 
@@ -33,6 +34,12 @@ impl Clients {
 		// println!("saved: {}", saved.is_some());
 		if let Some(saved) = saved {
 			let mut client = saved.lock().await;
+
+			// if the client was initialized with a different inst_id than the request has,
+			// it might be fishy and just say no
+			if client.inst_id() != credentials.inst_id() {
+				return Err(anyhow!("invalid credentials"));
+			}
 
 			let refresh_res = client.refresh_if_needed().await;
 			// if refresh token fails just log in again

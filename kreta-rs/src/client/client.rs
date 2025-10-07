@@ -65,4 +65,7 @@ impl Client {
 	pub(crate) fn access_token(&self) -> &str {
 		&self.tokens.access_token
 	}
+	pub fn inst_id(&self) -> &str {
+		&self.inst_id
+	}
 }

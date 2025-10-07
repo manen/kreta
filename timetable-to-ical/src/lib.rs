@@ -21,6 +21,7 @@ pub struct Options {
 
 	pub substitution_prefix: Cow<'static, str>,
 	pub announced_exam_prefix: Cow<'static, str>,
+	pub homework_prefix: Cow<'static, str>,
 	pub absence_prefix: Cow<'static, str>,
 	pub student_late_prefix: Cow<'static, str>,
 
@@ -36,6 +37,7 @@ impl Default for Options {
 			pretty_print_as_desc: false,
 			substitution_prefix: "🔄".into(),
 			announced_exam_prefix: "📝".into(),
+			homework_prefix: "🏠".into(),
 			absence_prefix: "🚫".into(),
 			student_late_prefix: "⏰".into(),
 		}
@@ -87,6 +89,9 @@ pub fn map_lessons_to_events<'a, I: IntoIterator<Item = &'a LessonRaw>>(
 			}
 			if lesson.announced_exam_uid.is_some() && opts.announced_exam_prefix.len() > 0 {
 				name_prefixes.push_str(&opts.announced_exam_prefix);
+			}
+			if lesson.homework_uid.is_some() && opts.homework_prefix.len() > 0 {
+				name_prefixes.push_str(&opts.homework_prefix);
 			}
 			if lesson.substitute_teacher_name.is_some() && opts.substitution_prefix.len() > 0 {
 				name_prefixes.push_str(&opts.substitution_prefix);

@@ -19,12 +19,18 @@ pub struct Options {
 	pub lesson_topic_in_name: bool,
 	pub teacher_name_in_location: bool,
 
+	// class info
 	pub substitution_prefix: Cow<'static, str>,
+	/// elmarado ora
+	pub cancelled_lesson_preifx: Cow<'static, str>,
+
 	pub announced_exam_prefix: Cow<'static, str>,
+	/// homework prefix appears on the day the homework is attached to, not the deadline lesson
 	pub homework_prefix: Cow<'static, str>,
+
 	pub absence_prefix: Cow<'static, str>,
 	pub student_late_prefix: Cow<'static, str>,
-
+	// class info end
 	/// includes a pretty print (basic rust {:#?}) of the entire [LessonRaw] as notes
 	pub pretty_print_as_desc: bool,
 }
@@ -36,6 +42,7 @@ impl Default for Options {
 			teacher_name_in_location: true,
 			pretty_print_as_desc: false,
 			substitution_prefix: "🔄".into(),
+			cancelled_lesson_preifx: "❌".into(),
 			announced_exam_prefix: "📝".into(),
 			homework_prefix: "🏠".into(),
 			absence_prefix: "🚫".into(),
@@ -86,6 +93,9 @@ pub fn map_lessons_to_events<'a, I: IntoIterator<Item = &'a LessonRaw>>(
 					}
 				}
 				_ => {}
+			}
+			if lesson.status.uid.contains("Elmaradt") && opts.cancelled_lesson_preifx.len() > 0 {
+				name_prefixes.push_str(&opts.cancelled_lesson_preifx);
 			}
 			if lesson.announced_exam_uid.is_some() && opts.announced_exam_prefix.len() > 0 {
 				name_prefixes.push_str(&opts.announced_exam_prefix);

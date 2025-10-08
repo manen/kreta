@@ -12,7 +12,18 @@ fn main() {
 		.build()
 		.unwrap();
 
-	rt.block_on(gen_timetable()).unwrap()
+	rt.block_on(homework()).unwrap()
+}
+
+async fn homework() -> anyhow::Result<()> {
+	let credentials = creds_from_file::read_from_file("./credentials.txt").await?;
+
+	let mut client = Client::full_login(&credentials).await?;
+
+	let hw = client.homework("2025-09-26", "2025-10-17").await?;
+	println!("{hw:?}");
+
+	Ok(())
 }
 
 async fn start() -> anyhow::Result<()> {

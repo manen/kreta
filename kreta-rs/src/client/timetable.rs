@@ -7,7 +7,8 @@ use super::Client;
 #[cfg(feature = "client")]
 impl Client {
 	/// https://nzx.hu/kreta-api/mobileapi/getlessons \
-	/// from & to are both expected to be in the format of yyyy-mm-dd
+	/// from & to are both expected to be in the format of yyyy-mm-dd \
+	/// maximum distance between from & to is one month
 	pub async fn timetable(&self, from: &str, to: &str) -> anyhow::Result<Vec<LessonRaw>> {
 		let url = format!(
 			"https://{}.e-kreta.hu/ellenorzo/v3/sajat/OrarendElemek?datumTol={from}&datumIg={to}",

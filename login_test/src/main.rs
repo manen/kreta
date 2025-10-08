@@ -20,7 +20,9 @@ async fn homework() -> anyhow::Result<()> {
 
 	let mut client = Client::full_login(&credentials).await?;
 
-	let hw = client.homework("2025-09-26", "2025-10-17").await?;
+	// let hw = client.homework("2025-09-26", "2025-10-17").await?;
+
+	let hw = client.exams("2025-09-26", "2025-10-17").await?;
 	println!("{hw:?}");
 
 	Ok(())

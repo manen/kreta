@@ -29,7 +29,7 @@ impl Client {
 		}
 
 		let resp = resp.text().await?;
-		println!("{resp}");
+		// println!("{resp}");
 		let resp: Vec<HomeworkRaw> = serde_json::from_str(&resp)
 			.with_context(|| format!("failed to deserialize response from {url}"))?;
 
@@ -44,9 +44,9 @@ pub struct HomeworkRaw {
 	pub uid: String,
 
 	#[serde(rename = "Tantargy")]
-	pub class: ClassRaw,
+	pub subject: SubjectRaw,
 	#[serde(rename = "TantargyNeve")]
-	pub class_name: String,
+	pub subject_name: String,
 
 	#[serde(rename = "RogzitoTanarNeve")]
 	pub teachers_name: String,
@@ -74,7 +74,7 @@ pub struct HomeworkRaw {
 	#[serde(rename = "OsztalyCsoport")]
 	pub class_group: ClassGroupRaw,
 }
-pub use super::timetable::ClassRaw;
+pub use super::timetable::SubjectRaw;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 /// a different data type than the one used for timetables for some fucking reason

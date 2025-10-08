@@ -61,7 +61,7 @@ pub struct LessonRaw {
 	#[serde(rename = "TanarNeve")]
 	pub teachers_name: String,
 	#[serde(rename = "Tantargy")]
-	pub class: ClassRaw,
+	pub subject: SubjectRaw,
 	#[serde(rename = "Tema")]
 	pub topic: Option<String>,
 	#[serde(rename = "TeremNeve")]
@@ -95,7 +95,7 @@ pub struct ClassGroupRaw {
 	pub name: String,
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct ClassRaw {
+pub struct SubjectRaw {
 	#[serde(rename = "Uid")]
 	pub uid: String,
 	#[serde(rename = "Nev")]

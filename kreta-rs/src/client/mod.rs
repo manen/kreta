@@ -5,5 +5,6 @@ pub use client::*;
 
 pub mod refresh;
 
+pub mod exam;
 pub mod homework;
 pub mod timetable;

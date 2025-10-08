@@ -4,8 +4,9 @@ kreta api interface rust-ban mert miert ne
 
 ## features
 
-logging in and acquiring tokens, refreshing tokens: yes \
-timetable querying and deserializing: also yes
+- logging in and acquiring tokens, refreshing tokens
+- timetable bulk querying and deserializing
+- homework bulk query
 
 anything else: no, pull requests welcome
 

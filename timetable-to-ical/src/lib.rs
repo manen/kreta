@@ -9,6 +9,8 @@ use kreta_rs::client::timetable::LessonRaw;
 pub mod absence_best_guess;
 use absence_best_guess::absence_guess;
 
+pub mod rich;
+
 pub mod err;
 
 use crate::absence_best_guess::Absence;
@@ -26,7 +28,7 @@ pub struct Options {
 
 	pub announced_exam_prefix: Cow<'static, str>,
 	/// homework prefix appears on the day the homework is attached to, not the deadline lesson
-	pub homework_prefix: Cow<'static, str>,
+	pub homework_given_prefix: Cow<'static, str>,
 
 	pub absence_prefix: Cow<'static, str>,
 	pub student_late_prefix: Cow<'static, str>,
@@ -44,118 +46,120 @@ impl Default for Options {
 			substitution_prefix: "🔄".into(),
 			cancelled_lesson_preifx: "❌".into(),
 			announced_exam_prefix: "📝".into(),
-			homework_prefix: "🏠".into(),
+			homework_given_prefix: "🏠".into(),
 			absence_prefix: "🚫".into(),
 			student_late_prefix: "⏰".into(),
 		}
 	}
 }
 
+pub fn lesson_to_event<'a>(lesson: &'a LessonRaw, opts: &Options) -> Event<'a> {
+	let uid = uuid::Uuid::new_v4();
+	let uid = format!("{uid}");
+
+	let dtstamp = match lesson.start_time.split('T').nth(0) {
+		Some(a) => a,
+		None => {
+			eprintln!("invalid lesson.start_time received: {}", lesson.start_time);
+			&lesson.date
+		}
+	};
+	let mut dtstamp = dtstamp.replace('-', "");
+	dtstamp.push_str("T000000Z");
+
+	let start_escaped = lesson.start_time.replace('-', "").replace(':', "");
+	let end_escaped = lesson.end_time.replace('-', "").replace(':', "");
+
+	let name = {
+		let name_base: Cow<str> = if opts.lowercase_subject_names {
+			lesson.name.to_lowercase().into()
+		} else {
+			(&lesson.name).into()
+		};
+
+		let mut name_prefixes = String::new();
+		let absence = absence_guess(&lesson.student_presence.name);
+		match absence {
+			Absence::Absent => {
+				if opts.absence_prefix.len() > 0 {
+					name_prefixes.push_str(&opts.absence_prefix);
+				}
+			}
+			Absence::Late => {
+				if opts.student_late_prefix.len() > 0 {
+					name_prefixes.push_str(&opts.student_late_prefix);
+				}
+			}
+			_ => {}
+		}
+		if lesson.status.uid.contains("Elmaradt") && opts.cancelled_lesson_preifx.len() > 0 {
+			name_prefixes.push_str(&opts.cancelled_lesson_preifx);
+		}
+		if lesson.announced_exam_uid.is_some() && opts.announced_exam_prefix.len() > 0 {
+			name_prefixes.push_str(&opts.announced_exam_prefix);
+		}
+		if lesson.homework_uid.is_some() && opts.homework_given_prefix.len() > 0 {
+			name_prefixes.push_str(&opts.homework_given_prefix);
+		}
+		if lesson.substitute_teacher_name.is_some() && opts.substitution_prefix.len() > 0 {
+			name_prefixes.push_str(&opts.substitution_prefix);
+		}
+
+		let name_suffixes = if lesson.topic.is_some() && opts.lesson_topic_in_name {
+			let topic = lesson
+				.topic
+				.as_ref()
+				.expect("we just checked that topic.is_some() == true");
+			format!(" - {topic}")
+		} else {
+			String::new()
+		};
+
+		match (name_prefixes.len(), name_suffixes.len()) {
+			(0, 0) => name_base,
+			(p, _) => {
+				if p > 0 {
+					name_prefixes.push(' ');
+				}
+
+				format!("{name_prefixes}{name_base}{name_suffixes}").into()
+			}
+		}
+	};
+
+	let location: Cow<str> = {
+		let room_name = &lesson.room_name;
+		if opts.teacher_name_in_location {
+			let teachers_name = match &lesson.substitute_teacher_name {
+				Some(a) => a,
+				None => &lesson.teachers_name,
+			};
+			format!("{room_name} - {teachers_name}").into()
+		} else {
+			room_name.into()
+		}
+	};
+
+	let mut event = Event::new(uid, dtstamp);
+	event.push(Summary::new(name));
+	event.push(DtStart::new(start_escaped));
+	event.push(DtEnd::new(end_escaped));
+	event.push(Location::new(location));
+
+	if opts.pretty_print_as_desc {
+		let desc = format!("{lesson:#?}");
+		let desc = escape_desc_text(&desc);
+		event.push(Description::new(desc));
+	}
+
+	event
+}
+
 pub fn map_lessons_to_events<'a, I: IntoIterator<Item = &'a LessonRaw>>(
 	iter: I,
 	opts: &Options,
 ) -> impl Iterator<Item = Event<'a>> {
-	iter.into_iter().map(|lesson| {
-		let uid = uuid::Uuid::new_v4();
-		let uid = format!("{uid}");
-
-		let dtstamp = match lesson.start_time.split('T').nth(0) {
-			Some(a) => a,
-			None => {
-				eprintln!("invalid lesson.start_time received: {}", lesson.start_time);
-				&lesson.date
-			}
-		};
-		let mut dtstamp = dtstamp.replace('-', "");
-		dtstamp.push_str("T000000Z");
-
-		let start_escaped = lesson.start_time.replace('-', "").replace(':', "");
-		let end_escaped = lesson.end_time.replace('-', "").replace(':', "");
-
-		let name = {
-			let name_base: Cow<'a, str> = if opts.lowercase_subject_names {
-				lesson.name.to_lowercase().into()
-			} else {
-				(&lesson.name).into()
-			};
-
-			let mut name_prefixes = String::new();
-			let absence = absence_guess(&lesson.student_presence.name);
-			match absence {
-				Absence::Absent => {
-					if opts.absence_prefix.len() > 0 {
-						name_prefixes.push_str(&opts.absence_prefix);
-					}
-				}
-				Absence::Late => {
-					if opts.student_late_prefix.len() > 0 {
-						name_prefixes.push_str(&opts.student_late_prefix);
-					}
-				}
-				_ => {}
-			}
-			if lesson.status.uid.contains("Elmaradt") && opts.cancelled_lesson_preifx.len() > 0 {
-				name_prefixes.push_str(&opts.cancelled_lesson_preifx);
-			}
-			if lesson.announced_exam_uid.is_some() && opts.announced_exam_prefix.len() > 0 {
-				name_prefixes.push_str(&opts.announced_exam_prefix);
-			}
-			if lesson.homework_uid.is_some() && opts.homework_prefix.len() > 0 {
-				name_prefixes.push_str(&opts.homework_prefix);
-			}
-			if lesson.substitute_teacher_name.is_some() && opts.substitution_prefix.len() > 0 {
-				name_prefixes.push_str(&opts.substitution_prefix);
-			}
-
-			let name_suffixes = if lesson.topic.is_some() && opts.lesson_topic_in_name {
-				let topic = lesson
-					.topic
-					.as_ref()
-					.expect("we just checked that topic.is_some() == true");
-				format!(" - {topic}")
-			} else {
-				String::new()
-			};
-
-			match (name_prefixes.len(), name_suffixes.len()) {
-				(0, 0) => name_base,
-				(p, _) => {
-					if p > 0 {
-						name_prefixes.push(' ');
-					}
-
-					format!("{name_prefixes}{name_base}{name_suffixes}").into()
-				}
-			}
-		};
-
-		let location: Cow<'a, str> = {
-			let room_name = &lesson.room_name;
-			if opts.teacher_name_in_location {
-				let teachers_name = match &lesson.substitute_teacher_name {
-					Some(a) => a,
-					None => &lesson.teachers_name,
-				};
-				format!("{room_name} - {teachers_name}").into()
-			} else {
-				room_name.into()
-			}
-		};
-
-		let mut event = Event::new(uid, dtstamp);
-		event.push(Summary::new(name));
-		event.push(DtStart::new(start_escaped));
-		event.push(DtEnd::new(end_escaped));
-		event.push(Location::new(location));
-
-		if opts.pretty_print_as_desc {
-			let desc = format!("{lesson:#?}");
-			let desc = escape_desc_text(&desc);
-			event.push(Description::new(desc));
-		}
-
-		event
-	})
+	iter.into_iter().map(|lesson| lesson_to_event(lesson, opts))
 }
 
 pub fn lessons_to_calendar<'a, I: IntoIterator<Item = &'a LessonRaw>>(

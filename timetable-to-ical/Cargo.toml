@@ -3,6 +3,9 @@ name = "timetable-to-ical"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+rich = ["kreta-rs/client"]
+
 [dependencies]
 chrono.workspace = true
 ics = "0.5.8"

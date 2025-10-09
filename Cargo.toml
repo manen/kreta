@@ -1,9 +1,10 @@
 [workspace]
 resolver = "3"
-members = [ "kreta-rs","login_test", "timetable-to-ical", "timetable-to-ical-server"]
+members = [ "kreta-combine", "kreta-rs","login_test", "timetable-to-ical", "timetable-to-ical-server"]
 
 [workspace.dependencies]
 kreta-rs = { path = "./kreta-rs", default-features = false }
+kreta-combine.path = "./kreta-combine"
 timetable-to-ical.path = "./timetable-to-ical"
 
 anyhow = "1.0.100"

@@ -1093,6 +1093,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "kreta-combine"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "kreta-rs",
+ "tokio",
+]
+
+[[package]]
 name = "kreta-rs"
 version = "0.1.0"
 dependencies = [

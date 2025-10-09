@@ -6,6 +6,9 @@ use super::Client;
 
 #[cfg(feature = "client")]
 impl Client {
+	/// https://nzx.hu/kreta-api/mobileapi/getannouncedtests \
+	/// from & to are yyyy-mm-dd
+	/// max distance is 1 month
 	pub async fn exams(&self, from: &str, to: &str) -> anyhow::Result<Vec<ExamRaw>> {
 		let url = format!(
 			"https://{}.e-kreta.hu/ellenorzo/v3/sajat/BejelentettSzamonkeresek?datumTol={from}&datumIg={to}",

@@ -12,7 +12,7 @@ fn main() {
 		.build()
 		.unwrap();
 
-	rt.block_on(homework()).unwrap()
+	rt.block_on(gen_timetable()).unwrap()
 }
 
 async fn homework() -> anyhow::Result<()> {
@@ -62,7 +62,7 @@ async fn gen_timetable() -> anyhow::Result<()> {
 		..Default::default()
 	};
 
-	let timetable = client.timetable("2025-09-01", "2025-10-01").await?;
+	let timetable = client.timetable("2025-09-25", "2025-10-23").await?;
 	let calendar = timetable_to_ical::lessons_to_calendar_file(&timetable, &opts);
 
 	tokio::fs::write("./timetable.ical", &calendar).await?;

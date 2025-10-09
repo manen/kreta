@@ -29,7 +29,7 @@ impl Client {
 		}
 
 		let resp = resp.text().await?;
-		// println!("{resp}");
+		println!("{resp}");
 		let resp: Vec<LessonRaw> = serde_json::from_str(&resp)
 			.with_context(|| format!("while deserializing response from {url}"))?;
 
@@ -52,25 +52,25 @@ pub struct LessonRaw {
 	pub name: String,
 
 	#[serde(rename = "Oraszam")]
-	pub oraszam: i32,
+	pub oraszam: Option<i32>,
 	#[serde(rename = "OraEvesSorszama")]
 	pub ora_eves_sorszama: Option<i32>,
 
 	#[serde(rename = "OsztalyCsoport")]
-	pub class_group: ClassGroupRaw,
+	pub class_group: Option<ClassGroupRaw>,
 	#[serde(rename = "TanarNeve")]
-	pub teachers_name: String,
+	pub teachers_name: Option<String>,
 	#[serde(rename = "Tantargy")]
-	pub subject: SubjectRaw,
+	pub subject: Option<SubjectRaw>,
 	#[serde(rename = "Tema")]
 	pub topic: Option<String>,
 	#[serde(rename = "TeremNeve")]
-	pub room_name: String,
+	pub room_name: Option<String>,
 
 	#[serde(rename = "Tipus")]
 	pub lesson_type: UidNameAndDescRaw,
 	#[serde(rename = "TanuloJelenlet")]
-	pub student_presence: UidNameAndDescRaw,
+	pub student_presence: Option<UidNameAndDescRaw>,
 	#[serde(rename = "Allapot")]
 	pub status: UidNameAndDescRaw,
 

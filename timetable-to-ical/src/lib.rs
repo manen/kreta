@@ -78,7 +78,11 @@ pub fn lesson_to_event<'a>(lesson: &'a LessonRaw, opts: &Options) -> Event<'a> {
 		};
 
 		let mut name_prefixes = String::new();
-		let absence = absence_guess(&lesson.student_presence.name);
+		let absence = lesson
+			.student_presence
+			.as_ref()
+			.map(|a| absence_guess(&a.name))
+			.unwrap_or(Absence::Present);
 		match absence {
 			Absence::Absent => {
 				if opts.absence_prefix.len() > 0 {
@@ -128,15 +132,22 @@ pub fn lesson_to_event<'a>(lesson: &'a LessonRaw, opts: &Options) -> Event<'a> {
 	};
 
 	let location: Cow<str> = {
-		let room_name = &lesson.room_name;
-		if opts.teacher_name_in_location {
-			let teachers_name = match &lesson.substitute_teacher_name {
-				Some(a) => a,
-				None => &lesson.teachers_name,
+		let room_name = lesson.room_name.as_ref();
+		let teachers_name = if opts.teacher_name_in_location {
+			let teachers_name: Option<&String> = match &lesson.substitute_teacher_name {
+				Some(a) => Some(a),
+				None => lesson.teachers_name.as_ref().map(|a| a.into()),
 			};
-			format!("{room_name} - {teachers_name}").into()
+			teachers_name
 		} else {
-			room_name.into()
+			None
+		};
+
+		match (room_name, teachers_name) {
+			(Some(room), Some(teacher)) => format!("{room} - {teacher}").into(),
+			(Some(room), None) => room.into(),
+			(None, Some(teacher)) => teacher.into(),
+			(None, None) => "".into(),
 		}
 	};
 

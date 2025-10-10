@@ -9,7 +9,8 @@ use kreta_rs::client::{exam::ExamRaw, homework::HomeworkRaw, timetable::LessonRa
 pub mod absence_best_guess;
 use absence_best_guess::absence_guess;
 
-pub mod rich;
+#[cfg(feature = "combine")]
+pub mod combine;
 
 pub mod err;
 
@@ -182,7 +183,6 @@ pub fn lesson_to_event_explicit<'a>(
 
 	let pretty_print = if opts.pretty_print_as_desc {
 		let desc = format!("{lesson:#?}");
-		let desc = escape_desc_text(&desc);
 		Some(desc)
 	} else {
 		None
@@ -212,6 +212,7 @@ pub fn lesson_to_event_explicit<'a>(
 		(None, _) => Some(info),
 	};
 	if let Some(desc) = desc {
+		let desc = escape_desc_text(&desc);
 		event.push(Description::new(desc));
 	}
 

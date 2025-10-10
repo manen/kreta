@@ -3,6 +3,10 @@ name = "timetable-to-ical-server"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+default = ["combine"] # TODO remove this
+combine = ["timetable-to-ical/combine"]
+
 [dependencies]
 actix-web = { version = "4.11.0", features = ["rustls"] }
 anyhow.workspace = true

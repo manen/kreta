@@ -2089,6 +2089,7 @@ dependencies = [
 name = "timetable-to-ical"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "chrono",
  "ics",
  "kreta-combine",

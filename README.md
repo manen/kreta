@@ -7,6 +7,7 @@ kreta api interface rust-ban mert miert ne
 - logging in and acquiring tokens, refreshing tokens
 - timetable bulk querying and deserializing
 - homework bulk query
+- exams bulk query
 
 anything else: no, pull requests welcome
 

@@ -7,21 +7,12 @@ use tokio::sync::Mutex;
 
 use crate::clients::Clients;
 
+#[cfg(feature = "combine")]
+pub mod combine;
+
 pub mod clients;
 pub mod landing;
 
-#[get("/basic/{inst_id}/{username}/{passwd}/timetable.ical")]
-async fn timetable_basic(
-	path: web::Path<(String, String, String)>,
-	clients: web::Data<Mutex<Clients>>,
-) -> impl Responder {
-	let output_calendar = timetable_generic(path.into_inner(), clients).await;
-
-	let resp = HttpResponse::Ok()
-		.content_type("text/calendar")
-		.body(output_calendar);
-	resp
-}
 #[get("/base64/{blob}/timetable.ical")]
 async fn timetable_base64(
 	path: web::Path<String>,
@@ -59,14 +50,6 @@ async fn timetable_base64(
 	resp
 }
 
-async fn timetable_generic(
-	creds: (String, String, String),
-	clients: web::Data<Mutex<Clients>>,
-) -> String {
-	let res = timetable_generic_res(creds, clients).await;
-	let output_calendar = timetable_to_ical::err::result_as_timetable(res);
-	output_calendar
-}
 async fn timetable_generic_res(
 	(inst_id, username, passwd): (String, String, String),
 	clients: web::Data<Mutex<Clients>>,
@@ -117,7 +100,6 @@ async fn main() -> anyhow::Result<()> {
 			.app_data(clients.clone())
 			.service(landing::index)
 			.service(landing::styles)
-			.service(timetable_basic)
 			.service(timetable_base64)
 	})
 	.bind(BIND)?

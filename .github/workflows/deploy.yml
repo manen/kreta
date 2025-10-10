@@ -11,11 +11,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: release build timetable-to-ical-server
-        run: cargo build --release -p timetable-to-ical-server
-
       - name: whoami
         run: whoami
+
+      - name: release build timetable-to-ical-server
+        run: cargo build --release -p timetable-to-ical-server
 
       - name: move binary to run location
         run: mv ./target/release/timetable-to-ical-server /opt/timetable-to-ical-server

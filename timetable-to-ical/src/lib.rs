@@ -4,7 +4,7 @@ use ics::{
 	Event, ICalendar,
 	properties::{Description, DtEnd, DtStart, Location, Summary},
 };
-use kreta_rs::client::timetable::LessonRaw;
+use kreta_rs::client::{exam::ExamRaw, homework::HomeworkRaw, timetable::LessonRaw};
 
 pub mod absence_best_guess;
 use absence_best_guess::absence_guess;
@@ -53,7 +53,21 @@ impl Default for Options {
 	}
 }
 
-pub fn lesson_to_event<'a>(lesson: &'a LessonRaw, opts: &Options) -> Event<'a> {
+#[derive(Copy, Clone, Debug, Default)]
+pub struct ExtraData<'a> {
+	/// false means show homework symbol where it's attached to the lesson (so it'll show up on the lesson it was given)
+	/// true means it'll show up when it's due (if it's attached in this struct)
+	is_homework_included: bool,
+
+	homework: Option<&'a HomeworkRaw>,
+	exam: Option<&'a ExamRaw>,
+}
+
+pub fn lesson_to_event_explicit<'a>(
+	lesson: &'a LessonRaw,
+	opts: &Options,
+	extra_data: ExtraData<'a>,
+) -> Event<'a> {
 	let uid = uuid::Uuid::new_v4();
 	let uid = format!("{uid}");
 
@@ -102,18 +116,27 @@ pub fn lesson_to_event<'a>(lesson: &'a LessonRaw, opts: &Options) -> Event<'a> {
 		if lesson.announced_exam_uid.is_some() && opts.announced_exam_prefix.len() > 0 {
 			name_prefixes.push_str(&opts.announced_exam_prefix);
 		}
-		if lesson.homework_uid.is_some() && opts.homework_given_prefix.len() > 0 {
+		let show_homework = match extra_data.is_homework_included {
+			false => lesson.homework_uid.is_some(),
+			true => extra_data.homework.is_some(),
+		};
+		if show_homework && opts.homework_given_prefix.len() > 0 {
 			name_prefixes.push_str(&opts.homework_given_prefix);
 		}
 		if lesson.substitute_teacher_name.is_some() && opts.substitution_prefix.len() > 0 {
 			name_prefixes.push_str(&opts.substitution_prefix);
 		}
 
-		let name_suffixes = if lesson.topic.is_some() && opts.lesson_topic_in_name {
-			let topic = lesson
-				.topic
-				.as_ref()
-				.expect("we just checked that topic.is_some() == true");
+		let topic = match &lesson.topic {
+			Some(topic) => Some(topic),
+			None => match extra_data.exam {
+				Some(exam) => Some(&exam.topic),
+				None => None,
+			},
+		};
+
+		let name_suffixes = if topic.is_some() && opts.lesson_topic_in_name {
+			let topic = topic.expect("we just checked that topic.is_some() == true");
 			format!(" - {topic}")
 		} else {
 			String::new()
@@ -157,13 +180,46 @@ pub fn lesson_to_event<'a>(lesson: &'a LessonRaw, opts: &Options) -> Event<'a> {
 	event.push(DtEnd::new(end_escaped));
 	event.push(Location::new(location));
 
-	if opts.pretty_print_as_desc {
+	let pretty_print = if opts.pretty_print_as_desc {
 		let desc = format!("{lesson:#?}");
 		let desc = escape_desc_text(&desc);
+		Some(desc)
+	} else {
+		None
+	};
+
+	let mut info = String::new();
+	match extra_data.exam {
+		Some(exam) => {
+			info += &format!(
+				"{} {}\n{}",
+				opts.announced_exam_prefix, exam.topic, exam.method.desc
+			);
+		}
+		None => {}
+	}
+	match extra_data.homework {
+		Some(hw) => {
+			info += &format!("{}\n{}", opts.homework_given_prefix, hw.text);
+		}
+		None => {}
+	}
+
+	let desc = match (pretty_print, info.len()) {
+		(Some(pretty_print), 0) => Some(pretty_print),
+		(Some(pretty_print), _) => Some(format!("{info}\n\n{pretty_print}")),
+		(None, 0) => None,
+		(None, _) => Some(info),
+	};
+	if let Some(desc) = desc {
 		event.push(Description::new(desc));
 	}
 
 	event
+}
+
+pub fn lesson_to_event<'a>(lesson: &'a LessonRaw, opts: &Options) -> Event<'a> {
+	lesson_to_event_explicit(lesson, opts, Default::default())
 }
 
 pub fn map_lessons_to_events<'a, I: IntoIterator<Item = &'a LessonRaw>>(

@@ -29,7 +29,7 @@ impl Client {
 		}
 
 		let resp = resp.text().await?;
-		println!("{resp}");
+		// println!("{resp}");
 		let resp: Vec<LessonRaw> = serde_json::from_str(&resp)
 			.with_context(|| format!("while deserializing response from {url}"))?;
 

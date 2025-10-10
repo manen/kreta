@@ -11,11 +11,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: release build timetable-to-ical-server
-        run: cargo build --release -p timetable-to-ical-server
+      - name: move target
+        run: if [ -d /opt/timetable-to-ical-server/target ]; then mv /opt/timetable-to-ical-server/target ./target; fi
 
-      - name: move binary to run location
-        run: mv ./target/release/timetable-to-ical-server /opt/timetable-to-ical-server
+      - name: release build timetable-to-ical-server
+        run: |
+          export PATH=/home/actions-runner/.cargo/bin:$PATH
+          cargo build --release -p timetable-to-ical-server
+
+      - name: copy binary to run location
+        run: cp ./target/release/timetable-to-ical-server /opt/timetable-to-ical-server
+
+      - name: move target into cache
+        run: mv ./target /opt/timetable-to-ical-server/
 
       - name: restart service
         run: sudo systemctl restart timetable-to-ical

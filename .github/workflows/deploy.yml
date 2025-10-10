@@ -1,0 +1,21 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - deploy
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: release build timetable-to-ical-server
+        run: cargo build --release -p timetable-to-ical-server
+
+      - name: move binary to run location
+        run: mv ./target/release/timetable-to-ical-server /opt/timetable-to-ical-server
+
+      - name: restart service
+        run: sudo systemctl restart timetable-to-ical

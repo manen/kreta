@@ -11,8 +11,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: whoami
-        run: whoami
+      - name: move target
+        run: if [ -d /opt/timetable-to-ical-server/target ]; then mv /opt/timetable-to-ical-server/target ./target; fi
 
       - name: release build timetable-to-ical-server
         run: |
@@ -21,6 +21,9 @@ jobs:
 
       - name: move binary to run location
         run: mv ./target/release/timetable-to-ical-server /opt/timetable-to-ical-server
+
+      - name: move target into cache
+        run: mv ./target /opt/timetable-to-ical-server/
 
       - name: restart service
         run: sudo systemctl restart timetable-to-ical

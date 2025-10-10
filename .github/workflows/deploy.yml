@@ -19,8 +19,8 @@ jobs:
           export PATH=/home/actions-runner/.cargo/bin:$PATH
           cargo build --release -p timetable-to-ical-server
 
-      - name: move binary to run location
-        run: mv ./target/release/timetable-to-ical-server /opt/timetable-to-ical-server
+      - name: copy binary to run location
+        run: cp ./target/release/timetable-to-ical-server /opt/timetable-to-ical-server
 
       - name: move target into cache
         run: mv ./target /opt/timetable-to-ical-server/

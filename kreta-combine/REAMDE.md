@@ -11,3 +11,5 @@ to generate rich timetable data filled out with everything there's to know about
 ## warning
 
 this crate is made for a pretty specific usecase, as part of [`timetable-to-ical`](../timetable-to-ical/)'s rich timetable generation. for a more generic usecase, you're probably better off using [`kreta-rs`](../kreta-rs) as-is.
+
+only use if you need a simple way to query literally everything there is to know about lessons in a given timeframe, including everything about possible homework and exams

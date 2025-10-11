@@ -19,6 +19,9 @@ jobs:
           export PATH=/home/actions-runner/.cargo/bin:$PATH
           cargo build --release -p timetable-to-ical-server
 
+      - name: stop service
+        run: sudo systemctl stop timetable-to-ical
+
       - name: copy binary to run location
         run: cp ./target/release/timetable-to-ical-server /opt/timetable-to-ical-server
 
@@ -26,4 +29,5 @@ jobs:
         run: mv ./target /opt/timetable-to-ical-server/
 
       - name: restart service
+        if: always()
         run: sudo systemctl restart timetable-to-ical

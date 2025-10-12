@@ -20,6 +20,7 @@ jobs:
           cargo build --release -p timetable-to-ical-server
 
       - name: stop service
+        id: stop_service
         run: sudo systemctl stop timetable-to-ical
 
       - name: copy binary to run location
@@ -29,5 +30,5 @@ jobs:
         run: mv ./target /opt/timetable-to-ical-server/
 
       - name: restart service
-        if: always()
+        if: steps.stop_service.outcome == 'success'
         run: sudo systemctl restart timetable-to-ical

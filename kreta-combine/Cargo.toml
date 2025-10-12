@@ -7,4 +7,4 @@ edition = "2024"
 anyhow.workspace = true
 chrono.workspace = true
 kreta-rs.workspace = true
-tokio.workspace = true
+tokio ={ workspace = true, features = ["macros"] }

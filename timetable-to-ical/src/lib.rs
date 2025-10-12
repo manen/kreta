@@ -1,5 +1,8 @@
 use std::borrow::Cow;
 
+use anyhow::Context;
+use chrono::{DateTime, Utc};
+use chrono_tz::Europe::Budapest;
 use ics::{
 	Event, ICalendar,
 	properties::{Description, DtEnd, DtStart, Location, Summary},
@@ -64,37 +67,44 @@ pub struct ExtraData<'a> {
 	exam: Option<&'a ExamRaw>,
 }
 
+const FORMAT_DATE: &str = "%Y%m%d";
+const FORMAT_DATETIME: &str = "%Y%m%dT%H%M%SZ";
+
+/// avoid throwing errors if possible
 pub fn lesson_to_event_explicit<'a>(
 	lesson: &'a LessonRaw,
 	opts: &Options,
 	extra_data: ExtraData<'a>,
-) -> Event<'a> {
+) -> anyhow::Result<Event<'a>> {
 	let uid = uuid::Uuid::new_v4();
 	let uid = format!("{uid}");
 
 	let (dtstamp, start_escaped, end_escaped) = {
-		let dtstamp = match lesson.start_time.split('T').nth(0) {
-			Some(a) => a,
-			None => {
-				eprintln!("invalid lesson.start_time received: {}", lesson.start_time);
-				&lesson.date
-			}
-		};
-		let mut dtstamp_base = dtstamp.replace('-', "");
+		let start: DateTime<Utc> = lesson
+			.start_time
+			.parse()
+			.with_context(|| format!("while parsing {} as a datetime", lesson.start_time))?;
+		let end: DateTime<Utc> = lesson
+			.end_time
+			.parse()
+			.with_context(|| format!("while parsing {} as a datetime", lesson.end_time))?;
+		// let (start, end) = (start.with_timezone(&Budapest), end.with_timezone(&Budapest));
 
-		if lesson.start_time == lesson.end_time {
+		if start == end {
 			// if start_time == end_time => make it an all day event (so far only seems to be school holidays n shit)
+			let start = start.with_timezone(&Budapest);
+			let event_time = start.format(FORMAT_DATE).to_string();
 			(
-				format!("{dtstamp_base}T000000Z"),
-				dtstamp_base.clone(),
-				dtstamp_base,
+				start.format("%Y%m%dT000000Z").to_string(),
+				event_time.clone(),
+				event_time,
 			)
 		} else {
-			dtstamp_base.push_str("T000000Z");
-			let start_escaped = lesson.start_time.replace('-', "").replace(':', "");
-			let end_escaped = lesson.end_time.replace('-', "").replace(':', "");
+			let dtstamp = start.format("%Y%m%dT000000Z").to_string();
+			let start = start.format(FORMAT_DATETIME).to_string();
+			let end = end.format(FORMAT_DATETIME).to_string();
 
-			(dtstamp_base, start_escaped, end_escaped)
+			(dtstamp, start, end)
 		}
 	};
 
@@ -229,40 +239,38 @@ pub fn lesson_to_event_explicit<'a>(
 		event.push(Description::new(desc));
 	}
 
-	event
+	Ok(event)
 }
 
-pub fn lesson_to_event<'a>(lesson: &'a LessonRaw, opts: &Options) -> Event<'a> {
+pub fn lesson_to_event<'a>(lesson: &'a LessonRaw, opts: &Options) -> anyhow::Result<Event<'a>> {
 	lesson_to_event_explicit(lesson, opts, Default::default())
 }
 
-pub fn map_lessons_to_events<'a, I: IntoIterator<Item = &'a LessonRaw>>(
+pub fn lessons_to_calendar_file_res<'a, I: IntoIterator<Item = &'a LessonRaw>>(
 	iter: I,
 	opts: &Options,
-) -> impl Iterator<Item = Event<'a>> {
-	iter.into_iter().map(|lesson| lesson_to_event(lesson, opts))
-}
-
-pub fn lessons_to_calendar<'a, I: IntoIterator<Item = &'a LessonRaw>>(
-	iter: I,
-	opts: &Options,
-) -> ICalendar<'a> {
+) -> anyhow::Result<String> {
 	let mut calendar = ICalendar::new("2.0", "timetable-to-ical");
 
-	let events_iter = map_lessons_to_events(iter, opts);
-	for event in events_iter {
+	let events_iter = iter
+		.into_iter()
+		.map(|lesson| (lesson, lesson_to_event(lesson, opts)));
+	for (lesson, event) in events_iter {
+		let event = event.with_context(|| {
+			format!("calling lesson_to_event returned an error\nlesson:\n{lesson:#?}")
+		})?;
+
 		calendar.add_event(event);
 	}
 
-	calendar
+	Ok(calendar.to_string())
 }
-
+/// errors get turned into a timetable
 pub fn lessons_to_calendar_file<'a, I: IntoIterator<Item = &'a LessonRaw>>(
 	iter: I,
 	opts: &Options,
 ) -> String {
-	let calendar = lessons_to_calendar(iter, opts);
-	calendar.to_string()
+	err::result_as_timetable(lessons_to_calendar_file_res(iter, opts))
 }
 
 // -- utils

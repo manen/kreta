@@ -14,3 +14,4 @@ kreta-rs = { workspace = true, default-features = false }
 kreta-combine = { workspace = true, optional = true }
 uuid = { version = "1.18.1", features = ["v4"] }
 anyhow = { workspace = true, optional = true }
+chrono-tz = "0.10.4"

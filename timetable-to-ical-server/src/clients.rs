@@ -2,26 +2,16 @@ use std::{collections::HashMap, sync::Arc};
 
 use anyhow::anyhow;
 use kreta_rs::{client::Client, login::Credentials};
+use sha2::Digest;
 use tokio::sync::Mutex;
 
 #[derive(Default)]
 /// essentially a client cache
 pub struct Clients {
-	map: HashMap<String, Arc<Mutex<Client>>>,
+	/// k: username, v: (password hash, client)
+	map: HashMap<String, (Vec<u8>, Arc<Mutex<Client>>)>,
 }
 impl Clients {
-	pub fn insert_client(
-		&mut self,
-		username: String,
-		client: Client,
-	) -> Option<Arc<Mutex<Client>>> {
-		self.map.insert(username, Arc::new(Mutex::new(client)))
-	}
-
-	pub fn get_client(&self, username: &str) -> Option<Arc<Mutex<Client>>> {
-		self.map.get(username).cloned()
-	}
-
 	/// either uses the saved client from the map, or logs in using the credentials
 	pub async fn client(
 		&mut self,
@@ -32,12 +22,12 @@ impl Clients {
 		// println!("retrieving client for {}", credentials.username());
 		let saved = self.map.get(credentials.username()).cloned();
 		// println!("saved: {}", saved.is_some());
-		if let Some(saved) = saved {
+		if let Some((passwd_hash, saved)) = saved {
 			let mut client = saved.lock().await;
 
-			// if the client was initialized with a different inst_id than the request has,
-			// it might be fishy and just say no
-			if client.inst_id() != credentials.inst_id() {
+			// check incoming credentials with the ones we have saved, refuse without explanation if they're incorrect
+			let incoming_passwd_hash = hash_password(credentials.passwd());
+			if client.inst_id() != credentials.inst_id() || passwd_hash != incoming_passwd_hash {
 				return Err(anyhow!("invalid credentials"));
 			}
 
@@ -55,9 +45,24 @@ impl Clients {
 
 		let client = Client::full_login(credentials).await?;
 		let client = Arc::new(Mutex::new(client));
+		let passwd_hash = hash_password(credentials.passwd());
+
 		self.map
-			.insert(credentials.username().into(), client.clone());
+			.insert(credentials.username().into(), (passwd_hash, client.clone()));
 		// println!("just saved client for {}", credentials.username());
 		Ok(client)
 	}
+}
+
+/// this would be an awful password hash function to use for any proper authentication service.
+/// the reason i think it's probably fine is because it only stays in memory and only ever checked against the incoming password
+/// of clients that have already previously authenticated successfully \
+/// but still i'm happy to accept pull requests or whatever if memory security of self-hosted, (most likely) single-user apps is your thing
+fn hash_password(passwd: &str) -> Vec<u8> {
+	let mut hasher = sha2::Sha256::default();
+	for _ in 0..42 {
+		hasher.update(passwd);
+	}
+	let res = hasher.finalize();
+	res.to_vec()
 }

@@ -72,18 +72,31 @@ pub fn lesson_to_event_explicit<'a>(
 	let uid = uuid::Uuid::new_v4();
 	let uid = format!("{uid}");
 
-	let dtstamp = match lesson.start_time.split('T').nth(0) {
-		Some(a) => a,
-		None => {
-			eprintln!("invalid lesson.start_time received: {}", lesson.start_time);
-			&lesson.date
+	let (dtstamp, start_escaped, end_escaped) = {
+		let dtstamp = match lesson.start_time.split('T').nth(0) {
+			Some(a) => a,
+			None => {
+				eprintln!("invalid lesson.start_time received: {}", lesson.start_time);
+				&lesson.date
+			}
+		};
+		let mut dtstamp_base = dtstamp.replace('-', "");
+
+		if lesson.start_time == lesson.end_time {
+			// if start_time == end_time => make it an all day event (so far only seems to be school holidays n shit)
+			(
+				format!("{dtstamp_base}T000000Z"),
+				dtstamp_base.clone(),
+				dtstamp_base,
+			)
+		} else {
+			dtstamp_base.push_str("T000000Z");
+			let start_escaped = lesson.start_time.replace('-', "").replace(':', "");
+			let end_escaped = lesson.end_time.replace('-', "").replace(':', "");
+
+			(dtstamp_base, start_escaped, end_escaped)
 		}
 	};
-	let mut dtstamp = dtstamp.replace('-', "");
-	dtstamp.push_str("T000000Z");
-
-	let start_escaped = lesson.start_time.replace('-', "").replace(':', "");
-	let end_escaped = lesson.end_time.replace('-', "").replace(':', "");
 
 	let name = {
 		let name_base: Cow<str> = if opts.lowercase_subject_names {

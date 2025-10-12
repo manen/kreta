@@ -2106,6 +2106,7 @@ dependencies = [
  "base64",
  "chrono",
  "kreta-rs",
+ "sha2",
  "timetable-to-ical",
  "tokio",
 ]

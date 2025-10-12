@@ -29,11 +29,12 @@ navigate to the url it tells you and the rest is pretty straight forward
 
 ### privacy & data handling
 
-nowhere in the `timetable-to-ical-server` stack does your password escape your request. i don't care about your grades. \
+nowhere in the `timetable-to-ical-server` stack does your password escape your request unencrypted. i don't care about your grades. \
 however, to avoid freaking out the kreta idp server, your access tokens are cached, and if possible reused and refreshed rather than doing the whole login sequence again. this means that these data points are saved across requests in memory:
 
 - your username (oktatási azonosító)
 - your school's id
+- a sha256 hash of your password, to ensure later requests aren't using a false password
 - your access & refresh tokens
 
 [you can review the relevant code here](./timetable-to-ical-server/src/clients.rs)

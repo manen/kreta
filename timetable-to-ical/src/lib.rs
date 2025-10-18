@@ -223,7 +223,18 @@ pub fn lesson_to_event_explicit<'a>(
 	}
 	match extra_data.homework {
 		Some(hw) => {
-			info += &format!("{}\n{}", opts.homework_given_prefix, hw.text);
+			let date_assigned: DateTime<Utc> = hw.date_assigned.parse().with_context(|| {
+				format!(
+					"while parsing homework.date_assigned as DateTime: {}",
+					hw.date_assigned
+				)
+			})?;
+			let date_assigned = date_assigned.with_timezone(&Budapest);
+			let date_assigned = date_assigned.format("%Y %B %d %H:%M:%S");
+			info += &format!(
+				"{}\n{}\n - {}, {date_assigned}",
+				opts.homework_given_prefix, hw.text, hw.teachers_name
+			);
 		}
 		None => {}
 	}

@@ -5,10 +5,7 @@ use age::{
 	x25519::{Identity, Recipient},
 };
 use anyhow::{Context, anyhow};
-use base64::{
-	Engine,
-	prelude::{BASE64_URL_SAFE, BASE64_URL_SAFE_NO_PAD},
-};
+use base64::{Engine, prelude::BASE64_URL_SAFE_NO_PAD};
 
 #[cfg(test)]
 mod tests;

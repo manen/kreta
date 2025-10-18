@@ -2762,6 +2762,7 @@ dependencies = [
  "anyhow",
  "base64 0.22.1",
  "chrono",
+ "credsign",
  "kreta-rs",
  "sha2",
  "timetable-to-ical",

@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use age::{
-	secrecy::{ExposeSecret, SecretString},
+	secrecy::ExposeSecret,
 	x25519::{Identity, Recipient},
 };
 use anyhow::anyhow;
@@ -9,22 +9,6 @@ use base64::{Engine, prelude::BASE64_URL_SAFE};
 
 #[cfg(test)]
 mod tests;
-
-fn genkey() -> String {
-	let key = Identity::generate();
-	// let pubkey = key.to_public();
-
-	// let plaintext = "hi";
-
-	// let encrypted = age::encrypt(&pubkey, plaintext.as_bytes());
-	// let decrypted = age::decrypt(&key, &encrypted);
-
-	// assert_eq!(decrypted, plaintext);
-
-	let a = key.to_string();
-	let secret = a.expose_secret();
-	secret.into()
-}
 
 pub async fn load_or_create<P: AsRef<Path>>(cwd: P) -> anyhow::Result<Signer> {
 	let cwd = cwd.as_ref();

@@ -93,11 +93,14 @@ const BIND: (&str, u16) = const {
 };
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+	let signer = credsign::load_or_create(std::env::current_dir()?).await?;
+	let signer = web::Data::new(signer);
 	let clients = web::Data::new(Mutex::new(Clients::default()));
 
 	let server = HttpServer::new(move || {
 		App::new()
 			.app_data(clients.clone())
+			.app_data(signer.clone())
 			.service(landing::index)
 			.service(landing::styles)
 			.service(timetable_base64)

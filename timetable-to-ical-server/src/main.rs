@@ -28,6 +28,7 @@ async fn main() -> anyhow::Result<()> {
 			.service(landing::index)
 			.service(landing::styles)
 			.service(timetables::timetable_base64::timetable_base64)
+			.service(timetables::combine_k8::combine_k8)
 			.service(k8::create_k8)
 	})
 	.bind(BIND)?

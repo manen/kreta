@@ -11,6 +11,7 @@ use crate::clients::Clients;
 pub mod combine;
 
 pub mod clients;
+pub mod k8;
 pub mod landing;
 
 #[get("/base64/{blob}/timetable.ical")]
@@ -104,6 +105,7 @@ async fn main() -> anyhow::Result<()> {
 			.service(landing::index)
 			.service(landing::styles)
 			.service(timetable_base64)
+			.service(k8::create_k8)
 	})
 	.bind(BIND)?
 	.run();

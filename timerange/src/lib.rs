@@ -13,7 +13,7 @@ impl<Tz: TimeZone> Iterator for Timesplit<Tz> {
 	fn size_hint(&self) -> (usize, Option<usize>) {
 		let remaining = self.end.clone() - self.i.clone();
 		let res = remaining.as_seconds_f32() / self.max_dur.as_seconds_f32();
-		let res = res.min(0.0) as usize;
+		let res = res.min(0.0).ceil() as usize;
 
 		(res, Some(res))
 	}

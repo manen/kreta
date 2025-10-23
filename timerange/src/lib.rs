@@ -1,4 +1,4 @@
-use chrono::TimeZone;
+use chrono::{DateTime, TimeZone};
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Timesplit<Tz: TimeZone> {
@@ -27,6 +27,20 @@ impl<Tz: TimeZone> Iterator for Timesplit<Tz> {
 		self.i = to.clone();
 
 		Some((from, to))
+	}
+}
+
+/// creates a new range of times \
+/// usage from here is similar to std::ops::Range, just an iterator
+pub fn range<Tz: TimeZone>(
+	from: DateTime<Tz>,
+	to: DateTime<Tz>,
+	max_duration: chrono::Duration,
+) -> Timesplit<Tz> {
+	Timesplit {
+		i: from,
+		end: to,
+		max_dur: max_duration,
 	}
 }
 

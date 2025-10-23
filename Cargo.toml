@@ -8,6 +8,7 @@ kreta-combine.path = "./kreta-combine"
 timetable-to-ical.path = "./timetable-to-ical"
 timetable-to-ical-server.path = "./timetable-to-ical-server"
 credsign.path = "./credsign"
+timerange.path = "./timerange"
 
 anyhow = "1.0.100"
 base64 = "0.22.1"
@@ -19,3 +20,4 @@ sha2 = "0.10.9"
 tokio = "1.47.1"
 serde_json = { package = "serde_json_path_to_error", version = "0.1.5" }
 chrono = { version = "0.4.42", default-features = false, features = ["std", "clock"] }
+futures = { version = "0.3.31", default-features = false, features = ["std"] }

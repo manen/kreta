@@ -1,11 +1,10 @@
 use actix_web::{HttpResponse, Responder, get, web};
 use anyhow::{Context, anyhow};
 use base64::Engine;
-use chrono::Utc;
 use kreta_rs::login::Credentials;
 use tokio::sync::Mutex;
 
-use crate::clients::Clients;
+use crate::{clients::Clients, timetables::one_month_range};
 
 #[get("/base64/{blob}/timetable.ical")]
 pub async fn timetable_base64(
@@ -66,17 +65,4 @@ async fn timetable_generic_res(
 	};
 	let res = res().await;
 	res
-}
-
-/// one month range centered on today
-fn one_month_range() -> (String, String) {
-	let today = Utc::now().date_naive();
-
-	let start = today - chrono::Duration::days(14);
-	let end = today + chrono::Duration::days(14);
-
-	(
-		start.format("%Y-%m-%d").to_string(),
-		end.format("%Y-%m-%d").to_string(),
-	)
 }

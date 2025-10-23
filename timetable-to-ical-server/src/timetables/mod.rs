@@ -2,3 +2,36 @@
 
 pub mod combine_k8;
 pub mod timetable_base64;
+
+use chrono::{DateTime, NaiveDateTime, NaiveTime, Utc};
+
+/// one month range centered on today
+fn one_month_range_base() -> (chrono::NaiveDate, chrono::NaiveDate) {
+	let today = Utc::now().date_naive();
+
+	let start = today - chrono::Duration::days(14);
+	let end = today + chrono::Duration::days(14);
+
+	(start, end)
+}
+
+fn one_month_range() -> (String, String) {
+	let (start, end) = one_month_range_base();
+	(
+		start.format("%Y-%m-%d").to_string(),
+		end.format("%Y-%m-%d").to_string(),
+	)
+}
+
+fn one_month_range_datetime() -> (chrono::DateTime<Utc>, chrono::DateTime<Utc>) {
+	let (start, end) = one_month_range_base();
+	let time = NaiveTime::from_hms_opt(0, 0, 0).expect("from_hms_opt(0, 0, 0) failed");
+
+	let start = NaiveDateTime::new(start, time);
+	let end = NaiveDateTime::new(end, time);
+
+	let start = DateTime::from_naive_utc_and_offset(start, Utc);
+	let end = DateTime::from_naive_utc_and_offset(end, Utc);
+
+	(start, end)
+}

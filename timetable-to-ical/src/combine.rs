@@ -1,18 +1,15 @@
 use anyhow::Context;
 use ics::ICalendar;
+use kreta_combine::CombinedLesson;
 use kreta_rs::client::Client;
 
 use crate::Options;
 
-pub async fn combined_calendar_file(
-	client: &Client,
-	from: &str,
-	to: &str,
+pub fn from_combined<'a>(
+	combined: impl IntoIterator<Item = &'a CombinedLesson>,
 	opts: &Options,
 ) -> anyhow::Result<String> {
-	let combined = kreta_combine::get_combined(client, from, to).await?;
-
-	let events = combined.iter().map(|lesson| {
+	let events = combined.into_iter().map(|lesson| {
 		let extra_data = crate::ExtraData {
 			is_homework_included: true,
 			homework: lesson.homework.as_ref(),
@@ -37,4 +34,28 @@ pub async fn combined_calendar_file(
 	};
 
 	Ok(calendar)
+}
+
+pub async fn combined_calendar_file(
+	client: &Client,
+	from: &str,
+	to: &str,
+	opts: &Options,
+) -> anyhow::Result<String> {
+	let combined = kreta_combine::get_combined(client, from, to).await?;
+
+	from_combined(&combined, opts)
+}
+pub async fn combined_range_calendar_file(
+	client: &Client,
+	from: chrono::DateTime<chrono::Utc>,
+	to: chrono::DateTime<chrono::Utc>,
+	opts: &Options,
+) -> anyhow::Result<String> {
+	let preprocessed = kreta_combine::get_preprocessed_range(client, from, to)
+		.await
+		.with_context(|| "while calling kreta_combine::get_preprocessed_range")?;
+	let combined = kreta_combine::match_preprocessed(preprocessed)?;
+
+	from_combined(&combined, opts)
 }

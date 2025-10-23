@@ -45,9 +45,11 @@ pub async fn combine_k8(
 
 		let timetable = {
 			let client = client.lock().await;
-			let (from, to) = three_week_range();
+			// let (from, to) = super::one_month_range_datetime();
+			let (from, to) = super::range_3w_3w();
 			let opts = timetable_to_ical::Options::default();
-			timetable_to_ical::combine::combined_calendar_file(&client, &from, &to, &opts).await?
+			timetable_to_ical::combine::combined_range_calendar_file(&client, from, to, &opts)
+				.await?
 		};
 
 		Ok(timetable)
@@ -60,15 +62,15 @@ pub async fn combine_k8(
 		.body(timetable)
 }
 
-/// one week back two weeks forward
-fn three_week_range() -> (String, String) {
-	let today = Utc::now().date_naive();
+// /// one week back two weeks forward
+// fn three_week_range() -> (String, String) {
+// 	let today = Utc::now().date_naive();
 
-	let start = today - chrono::Duration::days(7);
-	let end = today + chrono::Duration::days(14);
+// 	let start = today - chrono::Duration::days(7);
+// 	let end = today + chrono::Duration::days(14);
 
-	(
-		start.format("%Y-%m-%d").to_string(),
-		end.format("%Y-%m-%d").to_string(),
-	)
-}
+// 	(
+// 		start.format("%Y-%m-%d").to_string(),
+// 		end.format("%Y-%m-%d").to_string(),
+// 	)
+// }

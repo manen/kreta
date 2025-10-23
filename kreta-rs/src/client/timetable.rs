@@ -75,7 +75,7 @@ impl Client {
 
 		let mut stream = self.timetable_range_stream(from, to);
 		while let Some(next) = stream.next().await {
-			let next = next.with_context(|| "while reading from timerange stream")?;
+			let next = next.with_context(|| "while reading lessons from timerange stream")?;
 			buf.extend(next);
 		}
 

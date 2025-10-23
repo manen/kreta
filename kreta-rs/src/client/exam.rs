@@ -37,6 +37,52 @@ impl Client {
 	}
 }
 
+#[cfg(feature = "client")]
+#[cfg(feature = "timerange")]
+impl Client {
+	/// sets up a new FuturesUnordered with all of the chunks inside but doesn't start polling yet
+	/// so no need for this function to be async
+	pub fn exams_range_stream(
+		&self,
+		from: chrono::DateTime<chrono::Utc>,
+		to: chrono::DateTime<chrono::Utc>,
+	) -> impl futures::Stream<Item = anyhow::Result<Vec<ExamRaw>>> {
+		use futures::stream::FuturesUnordered;
+
+		let timesplit = timerange::range(from, to, chrono::Duration::days(30));
+
+		let mut stream = FuturesUnordered::new();
+		stream.extend(timesplit.map(|(from, to)| async move {
+			let from = from.format("%Y-%m-%d").to_string();
+			let to = to.format("%Y-%m-%d").to_string();
+
+			let exams = self.exams(&from, &to).await?;
+			anyhow::Ok(exams)
+		}));
+
+		stream
+	}
+
+	/// exams query with no maximum distance between from & to
+	pub async fn exams_range(
+		&self,
+		from: chrono::DateTime<chrono::Utc>,
+		to: chrono::DateTime<chrono::Utc>,
+	) -> anyhow::Result<Vec<ExamRaw>> {
+		use futures::StreamExt;
+
+		let mut buf = Vec::new();
+
+		let mut stream = self.exams_range_stream(from, to);
+		while let Some(next) = stream.next().await {
+			let next = next.with_context(|| "while reading exams from timerange stream")?;
+			buf.extend(next);
+		}
+
+		Ok(buf)
+	}
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ExamRaw {
 	#[serde(rename = "Uid")]

@@ -37,6 +37,52 @@ impl Client {
 	}
 }
 
+#[cfg(feature = "client")]
+#[cfg(feature = "timerange")]
+impl Client {
+	/// sets up a new FuturesUnordered with all of the chunks inside but doesn't start polling yet
+	/// so no need for this function to be async
+	pub fn homework_range_stream(
+		&self,
+		from: chrono::DateTime<chrono::Utc>,
+		to: chrono::DateTime<chrono::Utc>,
+	) -> impl futures::Stream<Item = anyhow::Result<Vec<HomeworkRaw>>> {
+		use futures::stream::FuturesUnordered;
+
+		let timesplit = timerange::range(from, to, chrono::Duration::weeks(3));
+
+		let mut stream = FuturesUnordered::new();
+		stream.extend(timesplit.map(|(from, to)| async move {
+			let from = from.format("%Y-%m-%d").to_string();
+			let to = to.format("%Y-%m-%d").to_string();
+
+			let homework = self.homework(&from, &to).await?;
+			anyhow::Ok(homework)
+		}));
+
+		stream
+	}
+
+	/// homework query with no maximum distance between from & to
+	pub async fn homework_range(
+		&self,
+		from: chrono::DateTime<chrono::Utc>,
+		to: chrono::DateTime<chrono::Utc>,
+	) -> anyhow::Result<Vec<HomeworkRaw>> {
+		use futures::StreamExt;
+
+		let mut buf = Vec::new();
+
+		let mut stream = self.homework_range_stream(from, to);
+		while let Some(next) = stream.next().await {
+			let next = next.with_context(|| "while reading homework from timerange stream")?;
+			buf.extend(next);
+		}
+
+		Ok(buf)
+	}
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 /// as returned by https://[instituteCode].e-kreta.hu/ellenorzo/v3/Sajat/HaziFeladatok
 pub struct HomeworkRaw {

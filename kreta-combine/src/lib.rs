@@ -25,6 +25,8 @@ pub type Preprocessed = (
 	HashMap<u64, HomeworkRaw>,
 	HashMap<String, ExamRaw>,
 );
+
+/// simple, 3 weeks at max
 pub async fn get_preprocessed(
 	client: &Client,
 	from: &str,
@@ -37,31 +39,15 @@ pub async fn get_preprocessed(
 	let homework = async {
 		let homework_raw = client.homework(from, to).await?;
 
-		let mut homework_map = HashMap::with_capacity(homework_raw.len());
-		// order all the homework we got into a hashmap where:
-		// - key is deadline date (without time) & subject name hasher
-		// - value is the HomeworkRaw
-		for homework in homework_raw {
-			let hash = get_homework_hash(&homework.date_deadline, &homework.subject_name)
-				.with_context(|| {
-					format!(
-						"while calculating hash for {} homework due {}",
-						homework.subject_name, homework.date_deadline
-					)
-				})?;
-			homework_map.insert(hash, homework);
-		}
-
+		let mut homework_map = HashMap::new();
+		process_homework(&mut homework_map, homework_raw)?;
 		anyhow::Ok(homework_map)
 	};
 	let exams = async {
 		let exams_raw = client.exams(from, to).await?;
 
-		let mut exams_map = HashMap::with_capacity(exams_raw.len());
-		for exam in exams_raw {
-			exams_map.insert(exam.uid.clone(), exam);
-		}
-
+		let mut exams_map = HashMap::new();
+		process_exams(&mut exams_map, exams_raw);
 		anyhow::Ok(exams_map)
 	};
 
@@ -73,6 +59,83 @@ pub async fn get_preprocessed(
 	let exams = exams.with_context(|| format!("while querying exams between {from} and {to}"))?;
 
 	Ok((timetable, homework, exams))
+}
+
+#[cfg(feature = "timerange")]
+pub async fn get_preprocessed_range(
+	client: &Client,
+	from: chrono::DateTime<chrono::Utc>,
+	to: chrono::DateTime<chrono::Utc>,
+) -> anyhow::Result<Preprocessed> {
+	use futures::StreamExt;
+	let timetable = async {
+		let mut buf = Vec::new();
+		let mut stream = client.timetable_range_stream(from.clone(), to.clone());
+		while let Some(next) = stream.next().await {
+			let next = next.with_context(|| "while reading chunk from timetable_range_stream")?;
+			process_timetable(&mut buf, next);
+		}
+
+		anyhow::Ok(buf)
+	};
+	let homework = async {
+		let mut buf = HashMap::new();
+		let mut stream = client.homework_range_stream(from.clone(), to.clone());
+		while let Some(next) = stream.next().await {
+			let next = next.with_context(|| "while reading chunk from homework_range_stream")?;
+			process_homework(&mut buf, next)
+				.with_context(|| "while processing chunk from homework_range_stream")?;
+		}
+
+		anyhow::Ok(buf)
+	};
+	let exams = async {
+		let mut buf = HashMap::new();
+		let mut stream = client.exams_range_stream(from.clone(), to.clone());
+		while let Some(next) = stream.next().await {
+			let next = next.with_context(|| "while reading chunk from exams_range_stream")?;
+			process_exams(&mut buf, next);
+		}
+
+		anyhow::Ok(buf)
+	};
+
+	let (timetable, homework, exams) = tokio::join!(timetable, homework, exams);
+	let (timetable, homework, exams) = (
+		timetable.with_context(|| format!("while querying lessons between {from:?} and {to:?}"))?,
+		homework.with_context(|| format!("while querying homework between {from:?} and {to:?}"))?,
+		exams.with_context(|| format!("while querying exams between {from:?} and {to:?}"))?,
+	);
+
+	anyhow::Ok((timetable, homework, exams))
+}
+
+fn process_timetable(buf: &mut Vec<LessonRaw>, incoming: impl IntoIterator<Item = LessonRaw>) {
+	buf.extend(incoming);
+}
+/// order all the homework we got into a hashmap where:
+/// - key is deadline date (without time) & subject name hasher
+/// - value is the HomeworkRaw
+fn process_homework(
+	buf: &mut HashMap<u64, HomeworkRaw>,
+	incoming: impl IntoIterator<Item = HomeworkRaw>,
+) -> anyhow::Result<()> {
+	let iter = incoming.into_iter().map(|hw| {
+		let hash = get_homework_hash(&hw.date_deadline, &hw.subject_name).with_context(|| {
+			format!(
+				"while calculating hash for {} homework due {}",
+				hw.subject_name, hw.date_deadline
+			)
+		})?;
+		Ok((hash, hw))
+	});
+	let iter = iter.collect::<anyhow::Result<Vec<_>>>()?;
+	buf.extend(iter);
+	Ok(())
+}
+fn process_exams(buf: &mut HashMap<String, ExamRaw>, incoming: impl IntoIterator<Item = ExamRaw>) {
+	let iter = incoming.into_iter().map(|exam| (exam.uid.clone(), exam));
+	buf.extend(iter);
 }
 
 type CombinedTimetable = Vec<CombinedLesson>;

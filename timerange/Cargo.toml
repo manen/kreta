@@ -1,0 +1,10 @@
+[package]
+name = "timerange"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+chrono.workspace = true
+
+[dev-dependencies]
+dateparser = "0.2.1"

@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = [ "credsign", "kreta-combine", "kreta-rs","login_test", "timetable-to-ical", "timetable-to-ical-server" ]
+members = [ "credsign", "kreta-combine", "kreta-rs","login_test", "timerange", "timetable-to-ical", "timetable-to-ical-server" ]
 
 [workspace.dependencies]
 kreta-rs = { path = "./kreta-rs", default-features = false }

@@ -1,6 +1,4 @@
 use actix_web::{HttpResponse, Responder, get, web};
-use anyhow::{Context, anyhow};
-use base64::Engine;
 use kreta_rs::login::Credentials;
 use tokio::sync::Mutex;
 
@@ -13,23 +11,9 @@ pub async fn timetable_base64(
 ) -> impl Responder {
 	let res = async move || {
 		let blob = path.into_inner();
-		let blob = base64::prelude::BASE64_URL_SAFE
-			.decode(&blob)
-			.with_context(|| "while decoding the base64 blob provided")?;
-		let blob = String::from_utf8(blob).with_context(|| "base64 encoded blob is not utf-8")?;
 
-		let mut credentials = blob.split('\n').map(String::from);
-		let username = credentials
-			.next()
-			.ok_or_else(|| anyhow!("invalid syntax for the base64 blob: first line is username"))?;
-		let passwd = credentials.next().ok_or_else(|| {
-			anyhow!("invalid syntax for the base64 blob: second line is password")
-		})?;
-		let inst_id = credentials.next().ok_or_else(|| {
-			anyhow!("invalid syntax for the base64 blob: third line is institute id")
-		})?;
-
-		let timetable = timetable_generic_res((inst_id, username, passwd), clients).await?;
+		let credentials = crate::k8::decode_base64(&blob)?;
+		let timetable = timetable_generic_res(credentials, clients).await?;
 
 		anyhow::Ok(timetable)
 	};
@@ -44,12 +28,10 @@ pub async fn timetable_base64(
 }
 
 async fn timetable_generic_res(
-	(inst_id, username, passwd): (String, String, String),
+	credentials: Credentials,
 	clients: web::Data<Mutex<Clients>>,
 ) -> anyhow::Result<String> {
 	let res = async move || {
-		let credentials = Credentials::new(inst_id, username, passwd);
-
 		let client = {
 			let mut clients = clients.lock().await;
 			clients.client(&credentials).await?

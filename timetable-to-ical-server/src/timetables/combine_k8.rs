@@ -1,8 +1,6 @@
 use actix_web::{HttpResponse, Responder, get, web};
-use anyhow::{Context, anyhow};
-use chrono::Utc;
+use anyhow::Context;
 use credsign::Signer;
-use kreta_rs::login::Credentials;
 use tokio::sync::Mutex;
 
 use crate::clients::Clients;
@@ -18,26 +16,9 @@ pub async fn combine_k8(
 		signer: web::Data<Signer>,
 		clients: web::Data<Mutex<Clients>>,
 	) -> anyhow::Result<String> {
-		let credentials = signer
-			.decrypt_text(&k8)
-			.with_context(|| "while decrypting k8")?;
-		let credentials = {
-			let mut credentials = credentials.split('\n').map(String::from);
-			let username = credentials
-				.next()
-				.ok_or_else(|| anyhow!("invalid syntax for k8: first line is username"))?;
-			let passwd = credentials
-				.next()
-				.ok_or_else(|| anyhow!("invalid syntax for k8: second line is password"))?;
-			let inst_id = credentials
-				.next()
-				.ok_or_else(|| anyhow!("invalid syntax for k8: third line is institute id"))?;
+		let credentials = crate::k8::decode_k8(&k8, &signer)
+			.with_context(|| format!("failed to decode k8 {k8}"))?;
 
-			(username, passwd, inst_id)
-		};
-		let (username, passwd, inst_id) = credentials;
-
-		let credentials = Credentials::new(inst_id, username, passwd);
 		let client = {
 			let mut clients = clients.lock().await;
 			clients.client(&credentials).await

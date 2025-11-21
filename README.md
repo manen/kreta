@@ -39,4 +39,5 @@ however, to avoid freaking out the kreta idp server, your access tokens are cach
 
 [you can review the relevant code here](./timetable-to-ical-server/src/clients.rs)
 
-timetable requests aren't cached, so one `timetable.ical` request = one kreta timetable query
+timetable requests aren't cached, so one `timetable.ical` request = one kreta timetable query, and \
+one `combine.ical` request = 6 kreta api calls (currently)

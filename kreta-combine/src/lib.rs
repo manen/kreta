@@ -147,7 +147,13 @@ pub struct CombinedLesson {
 	pub homework: Option<HomeworkRaw>,
 }
 
-pub fn match_preprocessed(preprocessed: Preprocessed) -> anyhow::Result<CombinedTimetable> {
+fn match_preprocessed_internal(
+	preprocessed: Preprocessed,
+) -> anyhow::Result<(
+	CombinedTimetable,
+	HashMap<u64, HomeworkRaw>,
+	HashMap<String, ExamRaw>,
+)> {
 	let (timetable, mut homework, mut exams) = preprocessed;
 	let mut combined = Vec::with_capacity(timetable.len());
 
@@ -172,9 +178,28 @@ pub fn match_preprocessed(preprocessed: Preprocessed) -> anyhow::Result<Combined
 		});
 	}
 
-	Ok(combined)
+	Ok((combined, homework, exams))
 }
 
+pub fn match_preprocessed(preprocessed: Preprocessed) -> anyhow::Result<CombinedTimetable> {
+	let (timetable, _, _) = match_preprocessed_internal(preprocessed)?;
+	Ok(timetable)
+}
+pub fn match_preprocessed_with_remainder(
+	preprocessed: Preprocessed,
+) -> anyhow::Result<(
+	CombinedTimetable,
+	HashMap<u64, HomeworkRaw>,
+	HashMap<String, ExamRaw>,
+)> {
+	let (timetable, mut homework, mut exams) = match_preprocessed_internal(preprocessed)?;
+	homework.shrink_to_fit();
+	exams.shrink_to_fit();
+
+	Ok((timetable, homework, exams))
+}
+
+/// 3 weeks max
 pub async fn get_combined(
 	client: &Client,
 	from: &str,

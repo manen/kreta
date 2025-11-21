@@ -44,44 +44,81 @@
 				<input type="text" id="institution" required />
 			</div>
 
+			<div class="row">
+				<div>
+					Az órarendlekérdezés típusa
+					<p class="with_margin">
+						timetable: egyszerű, 1 hónapos intervallum (2 hét előre, 2 hét
+						hátra), néhány adatot (pl.: dolgozat témája, házifeladat szövege)
+						nem tartalmaz, de csak 1 kérelmet küld a kréta szervereknek. a
+						házifeladatot a feladás napjához mutatja
+					</p>
+					<p class="with_margin">
+						combine: az órarend, dolgozatok és házifeladatok összessége, 3 hét
+						előre, 3 hét hátra. több információt tartalmaz, ezzel több kérelmet
+						is küld a kréta szerverekhez(!). a házifeladatot a határidő napjához
+						mutatja
+					</p>
+				</div>
+				<select id="timetable-type">
+					<option value="timetable">egyszerű timetable</option>
+					<option value="combine" selected>combine</option>
+				</select>
+			</div>
+
 			<button type="submit">órarend hozzáadása a naptárhoz</button>
 
 			<script>
 				const form = document.getElementById("loginForm");
 
-				form.addEventListener("submit", (event) => {
+				form.addEventListener("submit", async (event) => {
 					event.preventDefault();
 
 					const username = document.getElementById("username").value;
 					const password = document.getElementById("password").value;
 					const inst_id = document.getElementById("institution").value;
-
-					const blob_data = `${username}\n${password}\n${inst_id}`;
-
-					const bytes = new TextEncoder().encode(blob_data);
-					let base64 = btoa(String.fromCharCode(...bytes));
-					base64 = base64.replace(/\+/g, "-").replace(/\//g, "_");
-
-					const url = `${window.location.host}/base64/${base64}/timetable.ical`;
-					const webcal_url = `webcal://${url}`;
-					window.open(webcal_url, "_blank");
+					const timetable_type =
+						document.getElementById("timetable-type").value;
 
 					const output = document.getElementById("output");
-					output.innerHTML = `
+
+					output.innerHTML = "mindjárt tesó várj egy kicsit";
+
+					try {
+						const blob_data = `${username}\n${password}\n${inst_id}`;
+
+						const k8_resp = await fetch("/create_k8", {
+							method: "POST",
+							headers: {
+								"Content-Type": "text/plain",
+							},
+							body: blob_data,
+						});
+						const k8 = await k8_resp.text();
+
+						const url = `${window.location.host}/k8/${k8}/${timetable_type}.ical`;
+						const webcal_url = `webcal://${url}`;
+						window.open(webcal_url, "_blank");
+
+						output.innerHTML = `
 					<p>
 						elvileg most megnyílt a naptárad és hozzá tudod adni subscription calendar-ként az órarended. ha nem,
 						a naptár alkalmazásodban az alábbi linket megadva tudod importálni az órarended:
 					</p>
 
 					<code>
-						${webcal_url}
+						http://${url}
 					</code>
 
-					<p>
-						ezt a linket ne oszd meg senkivel! titkosítatlanul benne vannak a kréta bejelentkezési adataid, így ha bárki megszerzi, meg tudja nézni
-						a jegyeid vagy nemtom (kb az a legrosszabb amit egy kréta loginnal lehet csinálni, de attólmég tarsd meg magadnak)
-					</p>
+					<div class="with_margin">
+						további infók <a href="https://github.com/manen/kreta">a github oldalon</a> vannak
+					</div>
 					`;
+					} catch (err) {
+						output.innerHTML = `gatya hiba történt
+						
+					${err}`;
+					}
 				});
 			</script>
 		</form>

@@ -40,3 +40,14 @@ p {
 button {
 	padding: 0.6rem;
 }
+
+/* -- */
+
+.with_margin {
+	margin: 1rem;
+}
+
+.row {
+	display: flex;
+	flex-direction: row;
+}

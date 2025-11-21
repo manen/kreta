@@ -27,8 +27,9 @@ async fn main() -> anyhow::Result<()> {
 			.app_data(signer.clone())
 			.service(landing::index)
 			.service(landing::styles)
-			.service(timetables::timetable_base64::timetable_base64)
-			.service(timetables::combine_k8::combine_k8)
+			.service(timetables::login_base64::timetable_base64)
+			.service(timetables::login_k8::timetable_k8)
+			.service(timetables::login_k8::combine_k8)
 			.service(k8::create_k8)
 	})
 	.bind(BIND)?

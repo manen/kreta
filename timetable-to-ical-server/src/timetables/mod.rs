@@ -1,7 +1,12 @@
 //! contains the different implementations of timetable -> calendar generation
 
-pub mod combine_k8;
-pub mod timetable_base64;
+pub mod generic_timetable;
+pub use generic_timetable::generic_timetable;
+pub mod generic_combine;
+pub use generic_combine::generic_combine;
+
+pub mod login_base64;
+pub mod login_k8;
 
 use chrono::{DateTime, NaiveDateTime, NaiveTime, Utc};
 

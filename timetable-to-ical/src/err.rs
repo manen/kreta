@@ -33,3 +33,18 @@ pub fn result_as_timetable<E: Display + Debug>(res: Result<String, E>) -> String
 		}
 	}
 }
+
+pub fn handle_timetable_err<E: Display + Debug, F: FnOnce() -> Result<String, E>>(f: F) -> String {
+	let res = f();
+	result_as_timetable(res)
+}
+
+pub async fn handle_timetable_err_async<
+	E: Display + Debug,
+	F: Future<Output = Result<String, E>>,
+>(
+	future: F,
+) -> String {
+	let res = future.await;
+	result_as_timetable(res)
+}

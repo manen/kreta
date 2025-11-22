@@ -128,3 +128,16 @@ pub struct ClassGroupRaw {
 	#[serde(rename = "Uid")]
 	uid: String,
 }
+
+impl HomeworkRaw {
+	/// normally, homework text is an html fragment, usuall containing <p>, <a>, and <div> tags.
+	/// this method scrapes out only the text, making it easier on the eyes and easier to read
+	pub fn text_extract(&self) -> String {
+		use scraper::Html;
+
+		let fragment = Html::parse_fragment(&self.text);
+		let text: String = fragment.root_element().text().collect();
+
+		text
+	}
+}

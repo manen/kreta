@@ -92,7 +92,9 @@ pub async fn combined_range_calendar_file(
 		};
 		let desc = format!(
 			"{}\n{}\n - {}, {date_assigned}{pretty_print}",
-			opts.homework_given_prefix, homework.text, homework.teachers_name
+			opts.homework_given_prefix,
+			homework.text_extract(),
+			homework.teachers_name
 		);
 		event.push(Description::new(crate::escape_desc_text(&desc)));
 

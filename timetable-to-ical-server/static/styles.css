@@ -61,3 +61,11 @@ button {
 	width: clamp(0px, 26rem, 85%);
 	min-height: 12rem;
 }
+
+.output_url {
+	max-width: 100vw; /* never wider than viewport */
+	box-sizing: border-box; /* include padding/border in width */
+	padding: 1rem;
+	overflow-wrap: break-word; /* wrap long words */
+	word-break: break-word; /* fallback for older browsers */
+}

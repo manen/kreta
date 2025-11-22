@@ -19,6 +19,7 @@ pub mod err;
 
 use crate::absence_best_guess::Absence;
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug)]
 pub struct Options {
 	pub lowercase_subject_names: bool,
@@ -205,7 +206,7 @@ pub fn lesson_to_event_explicit<'a>(
 	event.push(Location::new(location));
 
 	let pretty_print = if opts.pretty_print_as_desc {
-		let desc = format!("{lesson:#?}");
+		let desc = format!("{lesson:#?}\n\n{extra_data:#?}");
 		Some(desc)
 	} else {
 		None
@@ -222,8 +223,22 @@ pub fn lesson_to_event_explicit<'a>(
 		None => {}
 	}
 	match extra_data.homework {
-		Some(hw) => {
-			info += &format!("{}\n{}", opts.homework_given_prefix, hw.text);
+		Some(homework) => {
+			let date_assigned: DateTime<Utc> =
+				homework.date_assigned.parse().with_context(|| {
+					format!(
+						"while parsing homework.date_assigned as DateTime: {}",
+						homework.date_assigned
+					)
+				})?;
+			let date_assigned = date_assigned.with_timezone(&Budapest);
+			let date_assigned = date_assigned.format("%Y %B %d %H:%M:%S");
+			info += &format!(
+				"{}\n{}\n - {}, {date_assigned}",
+				opts.homework_given_prefix,
+				homework.text_extract(),
+				homework.teachers_name
+			);
 		}
 		None => {}
 	}

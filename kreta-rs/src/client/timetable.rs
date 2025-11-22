@@ -37,6 +37,52 @@ impl Client {
 	}
 }
 
+#[cfg(feature = "client")]
+#[cfg(feature = "timerange")]
+impl Client {
+	/// sets up a new FuturesUnordered with all of the chunks inside but doesn't start polling yet
+	/// so no need for this function to be async
+	pub fn timetable_range_stream(
+		&self,
+		from: chrono::DateTime<chrono::Utc>,
+		to: chrono::DateTime<chrono::Utc>,
+	) -> impl futures::Stream<Item = anyhow::Result<Vec<LessonRaw>>> {
+		use futures::stream::FuturesUnordered;
+
+		let timesplit = timerange::range(from, to, chrono::Duration::days(30));
+
+		let mut stream = FuturesUnordered::new();
+		stream.extend(timesplit.map(|(from, to)| async move {
+			let from = from.format("%Y-%m-%d").to_string();
+			let to = to.format("%Y-%m-%d").to_string();
+
+			let timetable = self.timetable(&from, &to).await?;
+			anyhow::Ok(timetable)
+		}));
+
+		stream
+	}
+
+	/// timetable query with no maximum distance between from & to
+	pub async fn timetable_range(
+		&self,
+		from: chrono::DateTime<chrono::Utc>,
+		to: chrono::DateTime<chrono::Utc>,
+	) -> anyhow::Result<Vec<LessonRaw>> {
+		use futures::StreamExt;
+
+		let mut buf = Vec::new();
+
+		let mut stream = self.timetable_range_stream(from, to);
+		while let Some(next) = stream.next().await {
+			let next = next.with_context(|| "while reading lessons from timerange stream")?;
+			buf.extend(next);
+		}
+
+		Ok(buf)
+	}
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 /// represents a lesson returned by https://[instituteCode].e-kreta.hu/ellenorzo/v3/sajat/OrarendElem
 pub struct LessonRaw {

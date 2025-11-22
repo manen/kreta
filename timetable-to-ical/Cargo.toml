@@ -6,6 +6,8 @@ edition = "2024"
 [features]
 default = ["combine"] # TODO remove this
 combine = ["dep:kreta-combine", "dep:anyhow"]
+serde = ["dep:serde"]
+# serde = ["dep:serde"]
 
 [dependencies]
 chrono.workspace = true
@@ -14,4 +16,5 @@ kreta-rs = { workspace = true, default-features = false }
 kreta-combine = { workspace = true, optional = true }
 uuid = { version = "1.18.1", features = ["v4"] }
 anyhow = { workspace = true, optional = true }
-chrono-tz = "0.10.4"
+chrono-tz.workspace = true
+serde = { workspace = true, optional = true }

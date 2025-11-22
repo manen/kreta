@@ -40,3 +40,32 @@ p {
 button {
 	padding: 0.6rem;
 }
+
+/* -- */
+
+.with_margin {
+	margin: 1rem;
+}
+
+.row {
+	display: flex;
+	flex-direction: row;
+}
+
+.margin_v {
+	margin-top: 1rem;
+	margin-bottom: 1rem;
+}
+
+#options {
+	width: clamp(0px, 26rem, 85%);
+	min-height: 12rem;
+}
+
+.output_url {
+	max-width: 100vw; /* never wider than viewport */
+	box-sizing: border-box; /* include padding/border in width */
+	padding: 1rem;
+	overflow-wrap: break-word; /* wrap long words */
+	word-break: break-word; /* fallback for older browsers */
+}

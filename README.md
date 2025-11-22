@@ -39,4 +39,7 @@ however, to avoid freaking out the kreta idp server, your access tokens are cach
 
 [you can review the relevant code here](./timetable-to-ical-server/src/clients.rs)
 
-timetable requests aren't cached, so one `timetable.ical` request = one kreta timetable query
+when using the default k8 credentials system, your login details are encrypted using [age](https://crates.io/crates/age), only decrypted on the server, making the `.ical` requests safe over bare http. a k8 generated from one `timetable-to-ical-server` instance will not be vaild on another.
+
+timetable requests aren't cached, so one `timetable.ical` request = one kreta timetable query, and \
+one `combine.ical` request = 6 kreta api calls (currently)

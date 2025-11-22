@@ -1,12 +1,12 @@
-name: cargo check
+name: cargo test
 on:
   push:
     branches:
       - main
 jobs:
   deploy:
-    name: cargo check
+    name: cargo test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: cargo check --all
+      - run: cargo test --all

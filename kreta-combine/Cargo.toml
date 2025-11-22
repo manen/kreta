@@ -3,8 +3,14 @@ name = "kreta-combine"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+default = ["timerange"]
+timerange = ["kreta-rs/timerange", "dep:futures"]
+
 [dependencies]
 anyhow.workspace = true
 chrono.workspace = true
 kreta-rs.workspace = true
-tokio ={ workspace = true, features = ["macros"] }
+tokio = { workspace = true, features = ["macros"] }
+futures = { workspace = true, optional = true }
+chrono-tz.workspace = true

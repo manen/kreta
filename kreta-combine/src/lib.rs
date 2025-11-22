@@ -3,18 +3,20 @@ use std::{
 	hash::{DefaultHasher, Hash, Hasher},
 };
 
-use anyhow::{Context, anyhow};
+use anyhow::Context;
+use chrono::{DateTime, Utc};
+use chrono_tz::Europe::Budapest;
 use kreta_rs::client::{Client, exam::ExamRaw, homework::HomeworkRaw, timetable::LessonRaw};
 
-fn get_homework_hash(full_date: &str, subject_name: &str) -> anyhow::Result<u64> {
-	let deadline_date = full_date
-		.split('T')
-		.next()
-		.ok_or_else(|| anyhow!("homework.deadline_date is not a valid date (can't split by T)"))?;
+fn get_homework_hash<Tz: chrono::TimeZone>(
+	date: &DateTime<Tz>,
+	subject_uid: &str,
+) -> anyhow::Result<u64> {
+	let deadline_date = date.with_timezone(&Budapest).date_naive();
 
 	let mut hasher = DefaultHasher::new();
 	deadline_date.hash(&mut hasher);
-	subject_name.hash(&mut hasher);
+	subject_uid.hash(&mut hasher);
 	let hash = hasher.finish();
 
 	Ok(hash)
@@ -121,7 +123,13 @@ fn process_homework(
 	incoming: impl IntoIterator<Item = HomeworkRaw>,
 ) -> anyhow::Result<()> {
 	let iter = incoming.into_iter().map(|hw| {
-		let hash = get_homework_hash(&hw.date_deadline, &hw.subject_name).with_context(|| {
+		let deadline_date: DateTime<Utc> = hw.date_deadline.parse().with_context(|| {
+			format!(
+				"failed to parse homework deadline date {} as DateTime",
+				hw.date_deadline
+			)
+		})?;
+		let hash = get_homework_hash(&deadline_date, &hw.subject.uid).with_context(|| {
 			format!(
 				"while calculating hash for {} homework due {}",
 				hw.subject_name, hw.date_deadline
@@ -160,7 +168,14 @@ fn match_preprocessed_internal(
 	for lesson in timetable {
 		let homework = match &lesson.subject {
 			Some(subject) => {
-				let homework_hash = get_homework_hash(&lesson.start_time, &subject.name)?;
+				let date: DateTime<Utc> = lesson.start_time.parse().with_context(|| {
+					format!(
+						"while parsing lesson start time {} as a DateTime",
+						lesson.start_time
+					)
+				})?;
+
+				let homework_hash = get_homework_hash(&date, &subject.uid)?;
 				let homework = homework.remove(&homework_hash);
 				homework
 			}

@@ -13,3 +13,4 @@ chrono.workspace = true
 kreta-rs.workspace = true
 tokio = { workspace = true, features = ["macros"] }
 futures = { workspace = true, optional = true }
+chrono-tz.workspace = true

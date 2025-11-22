@@ -18,8 +18,7 @@ pub async fn generic_combine(
 
 	let (start, end) = range_3w_3w();
 
-	let mut opts = Options::default();
-	opts.pretty_print_as_desc = true;
+	let opts = Options::default();
 	let timetable =
 		timetable_to_ical::combine::combined_range_calendar_file(&client, start, end, &opts)
 			.await?;

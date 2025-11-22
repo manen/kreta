@@ -5,7 +5,7 @@ members = [ "credsign", "kreta-combine", "kreta-rs","login_test", "timerange", "
 [workspace.dependencies]
 kreta-rs = { path = "./kreta-rs", default-features = false }
 kreta-combine.path = "./kreta-combine"
-timetable-to-ical.path = "./timetable-to-ical"
+timetable-to-ical = { path = "./timetable-to-ical", features = ["serde"] }
 timetable-to-ical-server.path = "./timetable-to-ical-server"
 credsign.path = "./credsign"
 timerange.path = "./timerange"

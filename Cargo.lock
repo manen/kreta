@@ -2778,6 +2778,7 @@ dependencies = [
  "ics",
  "kreta-combine",
  "kreta-rs",
+ "serde",
  "uuid",
 ]
 
@@ -2791,6 +2792,7 @@ dependencies = [
  "chrono",
  "credsign",
  "kreta-rs",
+ "serde_json_path_to_error",
  "sha2",
  "timetable-to-ical",
  "tokio",

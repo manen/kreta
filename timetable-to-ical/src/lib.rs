@@ -19,6 +19,7 @@ pub mod err;
 
 use crate::absence_best_guess::Absence;
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug)]
 pub struct Options {
 	pub lowercase_subject_names: bool,

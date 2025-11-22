@@ -51,3 +51,13 @@ button {
 	display: flex;
 	flex-direction: row;
 }
+
+.margin_v {
+	margin-top: 1rem;
+	margin-bottom: 1rem;
+}
+
+#options {
+	width: clamp(0px, 26rem, 85%);
+	min-height: 12rem;
+}

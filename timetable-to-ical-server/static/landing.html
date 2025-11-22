@@ -4,6 +4,13 @@
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<link rel="stylesheet" href="/styles.css" />
+
+		<script>
+			window.timetable_to_ical_default_options = JSON.parse(
+				`${""}{%default_options%}`
+			);
+		</script>
+
 		<title>kreta -> naptar</title>
 	</head>
 	<body>
@@ -34,17 +41,28 @@
 		<hr />
 
 		<p>hozzáadás a naptárhoz:</p>
-		<form id="loginForm">
-			<div id="login-grid">
-				<label> Felhasználónév / Oktatási azonosító (7xxxxxxxxxx): </label>
-				<input type="text" id="username" required pattern="7\d*" />
-				<label> Jelszó: </label>
-				<input type="password" id="password" required />
-				<label> Intézmény azonosítója (https://xxxxxxx.e-kreta.hu): </label>
-				<input type="text" id="institution" required />
+		<form id="loginForm" class="margin_v">
+			<div>
+				<div id="login-grid">
+					<label> Felhasználónév / Oktatási azonosító (7xxxxxxxxxx): </label>
+					<input type="text" id="username" required pattern="7\d*" />
+					<label> Jelszó: </label>
+					<input type="password" id="password" required />
+					<label> Intézmény azonosítója (https://xxxxxxx.e-kreta.hu): </label>
+					<input type="text" id="institution" required />
+				</div>
+				<div>
+					ℹ️ A bejelentkezési adataid titkosításra kerülnek, a mostani beküldés
+					után csak titkosított formában fognak szerepelni az eszközöd és a
+					szerverünk között.
+					<a
+						href="https://github.com/manen/kreta?tab=readme-ov-file#privacy--data-handling"
+						>tudj meg többet</a
+					>
+				</div>
 			</div>
 
-			<div class="row">
+			<div class="row margin_v">
 				<div>
 					Az órarendlekérdezés típusa
 					<p class="with_margin">
@@ -66,6 +84,20 @@
 				</select>
 			</div>
 
+			<div class="margin_v">
+				<div>
+					Részletes opciók (nem kötelező):
+
+					<br />
+					jelmagyarázat itt található:
+					<a
+						href="https://github.com/manen/kreta/blob/main/timetable-to-ical/src/lib.rs"
+						>https://github.com/manen/kreta/blob/main/timetable-to-ical/src/lib.rs</a
+					>
+				</div>
+				<textarea name="options" id="options">{%default_options%}</textarea>
+			</div>
+
 			<button type="submit">órarend hozzáadása a naptárhoz</button>
 
 			<script>
@@ -79,12 +111,27 @@
 					const inst_id = document.getElementById("institution").value;
 					const timetable_type =
 						document.getElementById("timetable-type").value;
+					const options = document.getElementById("options").value;
 
 					const output = document.getElementById("output");
 
 					output.innerHTML = "mindjárt tesó várj egy kicsit";
 
 					try {
+						const options_slim = JSON.stringify(JSON.parse(options));
+						const options_isnt_default =
+							options_slim !=
+							JSON.stringify(window.timetable_to_ical_default_options);
+
+						let options_suffix = "";
+						if (options_isnt_default) {
+							const bytes = new TextEncoder().encode(options_slim);
+							let base64 = btoa(String.fromCharCode(...bytes));
+							base64 = base64.replace(/\+/g, "-").replace(/\//g, "_");
+
+							options_suffix = `?opts=${base64}`;
+						}
+
 						const blob_data = `${username}\n${password}\n${inst_id}`;
 
 						const k8_resp = await fetch("/create_k8", {
@@ -96,7 +143,7 @@
 						});
 						const k8 = await k8_resp.text();
 
-						const url = `${window.location.host}/k8/${k8}/${timetable_type}.ical`;
+						const url = `${window.location.host}/k8/${k8}/${timetable_type}.ical${options_suffix}`;
 						const webcal_url = `webcal://${url}`;
 						window.open(webcal_url, "_blank");
 

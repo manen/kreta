@@ -2792,6 +2792,7 @@ dependencies = [
  "chrono",
  "credsign",
  "kreta-rs",
+ "serde",
  "serde_json_path_to_error",
  "sha2",
  "timetable-to-ical",

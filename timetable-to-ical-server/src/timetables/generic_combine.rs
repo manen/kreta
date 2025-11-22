@@ -9,6 +9,7 @@ use crate::{clients::Clients, timetables::range_3w_3w};
 pub async fn generic_combine(
 	credentials: &Credentials,
 	clients: web::Data<Mutex<Clients>>,
+	opts: &Options,
 ) -> anyhow::Result<String> {
 	let client = {
 		let mut clients = clients.lock().await;
@@ -18,10 +19,8 @@ pub async fn generic_combine(
 
 	let (start, end) = range_3w_3w();
 
-	let opts = Options::default();
 	let timetable =
-		timetable_to_ical::combine::combined_range_calendar_file(&client, start, end, &opts)
-			.await?;
+		timetable_to_ical::combine::combined_range_calendar_file(&client, start, end, opts).await?;
 
 	Ok(timetable)
 }

@@ -8,6 +8,9 @@ pub use generic_combine::generic_combine;
 pub mod login_base64;
 pub mod login_k8;
 
+pub mod utils_receive_opts;
+pub use utils_receive_opts::OptsParams;
+
 use chrono::{DateTime, NaiveDateTime, NaiveTime, Utc};
 
 /// one month range centered on today

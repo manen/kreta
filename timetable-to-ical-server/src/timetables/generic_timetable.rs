@@ -9,6 +9,7 @@ use crate::{clients::Clients, timetables::one_month_range};
 pub async fn generic_timetable(
 	credentials: &Credentials,
 	clients: web::Data<Mutex<Clients>>,
+	opts: &Options,
 ) -> anyhow::Result<String> {
 	let client = {
 		let mut clients = clients.lock().await;
@@ -19,8 +20,7 @@ pub async fn generic_timetable(
 	let (start, end) = one_month_range();
 	let timetable = client.timetable(&start, &end).await?;
 
-	let opts = Options::default();
-	let timetable = timetable_to_ical::lessons_to_calendar_file(&timetable, &opts);
+	let timetable = timetable_to_ical::lessons_to_calendar_file(&timetable, opts);
 
 	anyhow::Ok(timetable)
 }

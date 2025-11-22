@@ -136,7 +136,11 @@ impl HomeworkRaw {
 		use scraper::Html;
 
 		let fragment = Html::parse_fragment(&self.text);
-		let text: String = fragment.root_element().text().collect();
+		let text: String = fragment
+			.root_element()
+			.text()
+			.collect::<Vec<_>>()
+			.join("\n");
 
 		text
 	}

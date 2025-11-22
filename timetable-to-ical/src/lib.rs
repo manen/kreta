@@ -205,7 +205,7 @@ pub fn lesson_to_event_explicit<'a>(
 	event.push(Location::new(location));
 
 	let pretty_print = if opts.pretty_print_as_desc {
-		let desc = format!("{lesson:#?}");
+		let desc = format!("{lesson:#?}\n\n{extra_data:#?}");
 		Some(desc)
 	} else {
 		None

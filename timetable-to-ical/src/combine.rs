@@ -84,8 +84,14 @@ pub async fn combined_range_calendar_file(
 		})?;
 		let date_assigned = date_assigned.with_timezone(&Budapest);
 		let date_assigned = date_assigned.format("%Y %B %d %H:%M:%S");
+
+		let pretty_print = if opts.pretty_print_as_desc {
+			format_args!("\n\n{homework:#?}")
+		} else {
+			format_args!("")
+		};
 		let desc = format!(
-			"{}\n{}\n - {}, {date_assigned}",
+			"{}\n{}\n - {}, {date_assigned}{pretty_print}",
 			opts.homework_given_prefix, homework.text, homework.teachers_name
 		);
 		event.push(Description::new(crate::escape_desc_text(&desc)));
@@ -105,8 +111,13 @@ pub async fn combined_range_calendar_file(
 		let date_day = date.format("%Y%m%d").to_string();
 
 		let mut event = Event::new(uid, date_day.clone());
+		let pretty_print = if opts.pretty_print_as_desc {
+			format_args!("\n\n{exam:#?}")
+		} else {
+			format_args!("")
+		};
 		event.push(Summary::new(format!(
-			"{} {} - {}",
+			"{} {} - {}{pretty_print}",
 			opts.announced_exam_prefix, exam.subject_name, exam.topic
 		)));
 		event.push(DtStart::new(date_day.clone()));

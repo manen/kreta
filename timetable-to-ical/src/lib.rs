@@ -251,7 +251,7 @@ pub fn lesson_to_event_explicit<'a>(
 					)
 				})?;
 			let date_assigned = date_assigned.with_timezone(&Budapest);
-			let date_assigned = date_assigned.format("%Y %B %d %H:%M:%S");
+			let date_assigned = date_assigned.format("%Y %B %d");
 			info += &format!(
 				"{}\n{}\n - {}, {date_assigned}\n\n",
 				opts.homework_given_prefix,

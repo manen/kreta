@@ -84,7 +84,7 @@ pub async fn combined_range_calendar_file(
 			)
 		})?;
 		let date_assigned = date_assigned.with_timezone(&Budapest);
-		let date_assigned = date_assigned.format("%Y %B %d %H:%M:%S");
+		let date_assigned = date_assigned.format("%Y %B %d");
 
 		let pretty_print = if opts.pretty_print_as_desc {
 			format_args!("\n\n{homework:#?}")

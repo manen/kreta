@@ -12,7 +12,18 @@ fn main() {
 		.build()
 		.unwrap();
 
-	rt.block_on(gen_timetable()).unwrap()
+	rt.block_on(absences()).unwrap()
+}
+
+async fn absences() -> anyhow::Result<()> {
+	let credentials = creds_from_file::read_from_file("./credentials.txt").await?;
+
+	let mut client = Client::full_login(&credentials).await?;
+
+	let absences = client.absences("2026-01-13", "2026-01-27").await?;
+	println!("{absences:#?}");
+
+	Ok(())
 }
 
 async fn homework() -> anyhow::Result<()> {

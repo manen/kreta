@@ -19,6 +19,7 @@ pub fn map_combined<'a>(
 			is_homework_included: true,
 			homework: lesson.homework.as_ref(),
 			exam: lesson.exam.as_ref(),
+			absence: lesson.absence.as_ref(),
 		};
 
 		crate::lesson_to_event_explicit(&lesson.lesson_raw, opts, extra_data)

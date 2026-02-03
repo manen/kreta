@@ -1,3 +1,6 @@
+#[cfg(feature = "timerange")]
+#[cfg(feature = "client")]
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "client")]
@@ -6,6 +9,9 @@ use crate::client::exam::{ClassGroupRaw, SubjectRaw, UidNameAndDescRaw};
 
 #[cfg(feature = "client")]
 impl Client {
+	/// https://nzx.hu/kreta-api/mobileapi/getomissions \
+	/// from & to are both yyyy-mm-dd
+	/// maximum distance is 3 weeks
 	pub async fn absences(&self, from: &str, to: &str) -> anyhow::Result<Vec<AbsenceRaw>> {
 		use anyhow::Context;
 
@@ -34,6 +40,54 @@ impl Client {
 			.with_context(|| format!("failed to deserialize response from {url}"))?;
 
 		Ok(resp)
+	}
+}
+
+#[cfg(feature = "client")]
+#[cfg(feature = "timerange")]
+impl Client {
+	/// creates a pollable stream of the absences in chunks
+	/// needs to be polled to start doing anything
+	pub fn absences_range_stream(
+		&self,
+		from: chrono::DateTime<Utc>,
+		to: chrono::DateTime<Utc>,
+	) -> impl futures::Stream<Item = anyhow::Result<Vec<AbsenceRaw>>> {
+		use futures::stream::FuturesUnordered;
+
+		let timesplit = timerange::range(from, to, chrono::Duration::weeks(3));
+
+		let mut stream = FuturesUnordered::new();
+		stream.extend(timesplit.map(|(from, to)| async move {
+			let from = from.format("%Y-%m-%d").to_string();
+			let to = to.format("%Y-%m-%d").to_string();
+
+			let absences = self.absences(&from, &to).await?;
+			anyhow::Ok(absences)
+		}));
+
+		stream
+	}
+
+	/// absence query with no maximum distance between from & to
+	pub async fn absences_range(
+		&self,
+		from: chrono::DateTime<Utc>,
+		to: chrono::DateTime<Utc>,
+	) -> anyhow::Result<Vec<AbsenceRaw>> {
+		use futures::StreamExt as _;
+
+		let mut buf = Vec::new();
+
+		let mut stream = self.absences_range_stream(from, to);
+		while let Some(next) = stream.next().await {
+			use anyhow::Context;
+
+			let next =
+				next.with_context(|| format!("while reading absences from timerange stream"))?;
+			buf.extend(next);
+		}
+		Ok(buf)
 	}
 }
 

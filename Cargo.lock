@@ -1601,6 +1601,7 @@ name = "login_test"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "chrono",
  "kreta-rs",
  "timetable-to-ical",
  "tokio",

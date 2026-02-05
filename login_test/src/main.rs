@@ -1,5 +1,6 @@
 #![allow(unused)]
 
+use anyhow::Context;
 use chrono::TimeZone;
 use kreta_rs::{client::Client, login::LoginFlow};
 
@@ -13,7 +14,31 @@ fn main() {
 		.build()
 		.unwrap();
 
-	rt.block_on(absences()).unwrap()
+	rt.block_on(absences_analyze()).unwrap()
+}
+
+async fn absences_analyze() -> anyhow::Result<()> {
+	let path = "./absences.cache";
+
+	let absences = absence_analyzer::retreive::load(path)
+		.await
+		.with_context(|| "while loading absences")?;
+	let absences = match absences {
+		Some(a) => a,
+		None => {
+			let credentials = creds_from_file::read_from_file("./credentials.txt").await?;
+			let client = Client::full_login(&credentials).await?;
+			let absences = absence_analyzer::retreive::fetch_absences(&client).await?;
+
+			absence_analyzer::retreive::save(&absences, path).await?;
+			absences
+		}
+	};
+
+	let data = absence_analyzer::absences_by_excuse_type(absences.iter());
+	println!("{data:#?}");
+
+	Ok(())
 }
 
 #[allow(deprecated)]

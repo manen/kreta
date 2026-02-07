@@ -49,7 +49,7 @@ fn push_to_absence_buf<K: Hash + Eq>(
 	let mut existing = existing.unwrap_or_default();
 
 	let hours = match minutes {
-		Some(a) => a as f32 / 60.0,
+		Some(a) => a as f32 / 45.0,
 		None => 1.0,
 	};
 

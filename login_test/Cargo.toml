@@ -9,3 +9,5 @@ tokio = { workspace = true, features = ["rt", "fs"] }
 
 kreta-rs = { workspace = true, features = ["client"] }
 timetable-to-ical.workspace = true
+chrono.workspace = true
+absence-analyzer.workspace = true

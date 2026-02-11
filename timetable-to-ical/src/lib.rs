@@ -7,7 +7,9 @@ use ics::{
 	Event, ICalendar,
 	properties::{Description, DtEnd, DtStart, Location, Summary},
 };
-use kreta_rs::client::{exam::ExamRaw, homework::HomeworkRaw, timetable::LessonRaw};
+use kreta_rs::client::{
+	absences::AbsenceRaw, exam::ExamRaw, homework::HomeworkRaw, timetable::LessonRaw,
+};
 
 pub mod absence_best_guess;
 use absence_best_guess::absence_guess;
@@ -66,6 +68,7 @@ pub struct ExtraData<'a> {
 
 	homework: Option<&'a HomeworkRaw>,
 	exam: Option<&'a ExamRaw>,
+	absence: Option<&'a AbsenceRaw>,
 }
 
 const FORMAT_DATE: &str = "%Y%m%d";
@@ -213,10 +216,26 @@ pub fn lesson_to_event_explicit<'a>(
 	};
 
 	let mut info = String::new();
+	match extra_data.absence {
+		Some(absence) => {
+			let absence_line = match absence.late_by_minutes {
+				Some(minutes) => format!("{} {minutes} perc", opts.student_late_prefix).into(),
+				None => format!("{}", opts.absence_prefix),
+			};
+			let excuse_line = match &absence.excuse_type {
+				Some(t) => format!("{} - {}", absence.excuse_status, t.desc),
+				None => absence.excuse_status.clone(),
+			};
+
+			let block = format!("{absence_line}\n{excuse_line}\n\n");
+			info += &block;
+		}
+		None => {}
+	}
 	match extra_data.exam {
 		Some(exam) => {
 			info += &format!(
-				"{} {}\n{}",
+				"{} {}\n{}\n\n",
 				opts.announced_exam_prefix, exam.topic, exam.method.desc
 			);
 		}
@@ -232,9 +251,9 @@ pub fn lesson_to_event_explicit<'a>(
 					)
 				})?;
 			let date_assigned = date_assigned.with_timezone(&Budapest);
-			let date_assigned = date_assigned.format("%Y %B %d %H:%M:%S");
+			let date_assigned = date_assigned.format("%Y %B %d");
 			info += &format!(
-				"{}\n{}\n - {}, {date_assigned}",
+				"{}\n{}\n - {}, {date_assigned}\n\n",
 				opts.homework_given_prefix,
 				homework.text_extract(),
 				homework.teachers_name

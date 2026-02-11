@@ -6,5 +6,7 @@ thankss.py
 credentials.txt
 timetable.ical
 *.log
+absences*.cache
+absences*.svg
 
 .k8

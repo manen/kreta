@@ -1,5 +1,7 @@
 #![allow(unused)]
 
+use anyhow::Context;
+use chrono::TimeZone;
 use kreta_rs::{client::Client, login::LoginFlow};
 
 mod creds_from_file;
@@ -12,7 +14,53 @@ fn main() {
 		.build()
 		.unwrap();
 
-	rt.block_on(gen_timetable()).unwrap()
+	rt.block_on(absences_analyze()).unwrap()
+}
+
+async fn absences_analyze() -> anyhow::Result<()> {
+	let path = "./absences.cache";
+
+	let absences = absence_analyzer::retreive::load(path)
+		.await
+		.with_context(|| "while loading absences")?;
+	let absences = match absences {
+		Some(a) => a,
+		None => {
+			let credentials = creds_from_file::read_from_file("./credentials.txt").await?;
+			let client = Client::full_login(&credentials).await?;
+			let absences = absence_analyzer::retreive::fetch_absences(&client).await?;
+
+			absence_analyzer::retreive::save(&absences, path).await?;
+			absences
+		}
+	};
+
+	let data = absence_analyzer::absences_by_excuse_type(absences.iter());
+	println!("{data:#?}");
+
+	Ok(())
+}
+
+#[allow(deprecated)]
+fn parse_simple_date(simple: &str) -> anyhow::Result<chrono::DateTime<chrono::Utc>> {
+	let date = chrono::NaiveDate::parse_from_str(simple, "%Y-%m-%d")?;
+	let datetime = chrono::Utc.from_utc_date(&date).and_hms(0, 0, 0);
+
+	Ok(datetime)
+}
+
+async fn absences() -> anyhow::Result<()> {
+	let credentials = creds_from_file::read_from_file("./credentials.txt").await?;
+
+	let mut client = Client::full_login(&credentials).await?;
+
+	let (from, to) = ("2025-12-13", "2026-02-03");
+	let (from, to) = (parse_simple_date(from)?, parse_simple_date(to)?);
+
+	let absences = client.absences_range(from, to).await?;
+	println!("{absences:#?}");
+
+	Ok(())
 }
 
 async fn homework() -> anyhow::Result<()> {

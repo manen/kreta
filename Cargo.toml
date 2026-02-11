@@ -1,6 +1,15 @@
 [workspace]
 resolver = "3"
-members = [ "credsign", "kreta-combine", "kreta-rs","login_test", "timerange", "timetable-to-ical", "timetable-to-ical-server" ]
+members = [
+	"credsign",
+	"kreta-combine",
+	"kreta-rs",
+	"login_test",
+	"timerange",
+	"timetable-to-ical",
+	"timetable-to-ical-server",
+	"absence-analyzer",
+]
 
 [workspace.dependencies]
 kreta-rs = { path = "./kreta-rs", default-features = false }
@@ -9,16 +18,22 @@ timetable-to-ical = { path = "./timetable-to-ical", features = ["serde"] }
 timetable-to-ical-server.path = "./timetable-to-ical-server"
 credsign.path = "./credsign"
 timerange.path = "./timerange"
+absence-analyzer.path = "./absence-analyzer"
 
 anyhow = "1.0.100"
 base64 = "0.22.1"
 rand = "0.9.2"
-reqwest = { version = "0.12.23", default-features = false, features = ["rustls-tls"] }
+reqwest = { version = "0.12.23", default-features = false, features = [
+	"rustls-tls",
+] }
 scraper = "0.24.0"
 serde = { version = "1.0.226", features = ["derive"] }
 sha2 = "0.10.9"
 tokio = "1.47.1"
 serde_json = { package = "serde_json_path_to_error", version = "0.1.5" }
-chrono = { version = "0.4.42", default-features = false, features = ["std", "clock"] }
+chrono = { version = "0.4.42", default-features = false, features = [
+	"std",
+	"clock",
+] }
 chrono-tz = "0.10.4"
 futures = { version = "0.3.31", default-features = false, features = ["std"] }

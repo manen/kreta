@@ -14,7 +14,7 @@ chrono.workspace = true
 ics = "0.5.8"
 kreta-rs = { workspace = true }
 kreta-combine = { workspace = true, optional = true }
-uuid = { version = "1.18.1", features = ["v4"] }
+uuid = { version = "1.21.0", features = ["v4"] }
 anyhow.workspace = true
 chrono-tz.workspace = true
 serde = { workspace = true, optional = true }

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<style>
+			:root {
+				--bg-color: white;
+				--text-color: black;
+			}
+
+			@media (prefers-color-scheme: dark) {
+				:root {
+					--bg-color: #121212;
+					--text-color: #eee;
+				}
+			}
+
+			html,
+			body {
+				background-color: var(--bg-color);
+				color: var(--text-color);
+			}
+		</style>
+		<title>Mulasztások</title>
+	</head>
+	<body>
+		{content}
+	</body>
+</html>

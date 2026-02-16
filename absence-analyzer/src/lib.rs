@@ -1,8 +1,10 @@
-use std::{collections::HashMap, hash::Hash};
+use std::{collections::HashMap, fmt::Display, hash::Hash};
 
-use anyhow::{Context, anyhow};
-use kreta_rs::client::{Client, absences::AbsenceRaw};
+use anyhow::anyhow;
+use kreta_rs::client::{absences::AbsenceRaw};
 
+pub mod forecast;
+pub mod html_stats;
 pub mod retreive;
 
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Default)]
@@ -16,6 +18,15 @@ pub enum ExcuseType {
 	ToBeExcused,
 	Unexcused,
 	Excused(String),
+}
+impl Display for ExcuseType {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Self::ToBeExcused => write!(f, "Igazolandó"),
+			Self::Unexcused => write!(f, "Igazolatlan"),
+			Self::Excused(excuse) => write!(f, "{excuse}"),
+		}
+	}
 }
 impl ExcuseType {
 	pub fn derive_from(absence: &AbsenceRaw) -> anyhow::Result<Self> {
@@ -80,12 +91,14 @@ pub fn absences_by_excuse_type_opt<'a>(
 }
 pub fn absences_by_excuse_type<'a>(
 	absences: impl Iterator<Item = &'a AbsenceRaw>,
-) -> HashMap<ExcuseType, AbsenceDetails> {
+) -> AbsencesByExcuse {
 	let opt = absences_by_excuse_type_opt(absences);
-	opt.into_iter()
+	let absences = opt
+		.into_iter()
 		.filter_map(|(k, v)| match k {
 			Some(a) => Some((a, v)),
 			None => None,
 		})
-		.collect()
+		.collect();
+	AbsencesByExcuse { absences }
 }

@@ -30,6 +30,7 @@ async fn main() -> anyhow::Result<()> {
 			.service(timetables::login_base64::timetable_base64)
 			.service(timetables::login_k8::timetable_k8)
 			.service(timetables::login_k8::combine_k8)
+			.service(timetables::login_k8::absences_k8)
 			.service(k8::create_k8)
 	})
 	.bind(BIND)?

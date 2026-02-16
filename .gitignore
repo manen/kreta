@@ -8,5 +8,6 @@ timetable.ical
 *.log
 absences*.cache
 absences*.svg
+absences*.html
 
 .k8

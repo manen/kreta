@@ -5,6 +5,9 @@ pub use generic_timetable::generic_timetable;
 pub mod generic_combine;
 pub use generic_combine::generic_combine;
 
+pub mod generic_absences;
+pub use generic_absences::generic_absences;
+
 pub mod login_base64;
 pub mod login_k8;
 

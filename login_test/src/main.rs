@@ -38,6 +38,9 @@ async fn absences_analyze() -> anyhow::Result<()> {
 	let data = absence_analyzer::absences_by_excuse_type(absences.iter());
 	println!("{data:#?}");
 
+	let html = absence_analyzer::html_stats::html_stats(&data);
+	tokio::fs::write("./absences.html", &html).await?;
+
 	Ok(())
 }
 

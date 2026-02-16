@@ -25,10 +25,10 @@ pub fn by_excuse_type_unsorted<'a>(
 		let col = format!(
 			"
 			<div style=\"display: flex; align-items: center; flex-direction: column;\">
-				<div style=\"display: flex; justify-content: center; color: black; margin: 0.5rem; margin-bottom: 0.3rem;\">
+				<div style=\"display: flex; justify-content: center; color: var(--text-color); margin: 0.5rem; margin-bottom: 0.3rem;\">
 					{ty}
 				</div>
-				<div style=\"display: flex; justify-content: center; color: black; margin: 0.2rem; font-weight: bold;\">
+				<div style=\"display: flex; justify-content: center; color: var(--text-color); margin: 0.2rem; font-weight: bold;\">
 					{col_text} óra
 				</div>
 				<div style=\"height: {col_height}em; width: {col_width}em; background-color: {col_color};\">

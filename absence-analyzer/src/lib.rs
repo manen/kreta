@@ -3,6 +3,7 @@ use std::{collections::HashMap, fmt::Display, hash::Hash};
 use anyhow::{Context, anyhow};
 use kreta_rs::client::{Client, absences::AbsenceRaw};
 
+pub mod forecast;
 pub mod html_stats;
 pub mod retreive;
 

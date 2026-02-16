@@ -5,6 +5,8 @@ use std::{
 
 mod col_by_type;
 pub use col_by_type::*;
+mod total;
+pub use total::*;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Color {

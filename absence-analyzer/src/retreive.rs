@@ -2,7 +2,7 @@ use anyhow::Context;
 use chrono::{DateTime, Datelike, TimeZone, Utc};
 use kreta_rs::client::{Client, absences::AbsenceRaw};
 
-fn last_september_first() -> DateTime<Utc> {
+pub fn last_september_first() -> DateTime<Utc> {
 	let now = Utc::now();
 	let year = if now.month() > 9 || (now.month() == 9 && now.day() >= 1) {
 		now.year()

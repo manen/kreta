@@ -2818,6 +2818,7 @@ dependencies = [
 name = "timetable-to-ical-server"
 version = "0.1.0"
 dependencies = [
+ "absence-analyzer",
  "actix-web",
  "anyhow",
  "base64 0.22.1",

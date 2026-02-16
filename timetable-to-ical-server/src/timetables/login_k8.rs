@@ -1,4 +1,4 @@
-use actix_web::{HttpResponse, Responder, get, web};
+use actix_web::{Either, HttpResponse, Responder, get, web};
 use anyhow::Context;
 use credsign::Signer;
 use timetable_to_ical::err::handle_timetable_err_async;
@@ -52,4 +52,31 @@ pub async fn timetable_k8(
 	HttpResponse::Ok()
 		.content_type("text/calendar")
 		.body(timetable)
+}
+
+#[get("/k8/{k8}/absences.html")]
+pub async fn absences_k8(
+	k8: web::Path<String>,
+	signer: web::Data<Signer>,
+	clients: web::Data<Mutex<Clients>>,
+) -> impl Responder {
+	let f = async || {
+		let k8 = k8.into_inner();
+		let credentials = crate::k8::decode_k8(&k8, &signer)
+			.with_context(|| format!("failed to decode k8 {k8}"))?;
+
+		let html = super::generic_absences(&credentials, clients.clone()).await?;
+		anyhow::Ok(html)
+	};
+	let f = f().await;
+
+	match f {
+		Ok(a) => Either::Left(a),
+		Err(err) => {
+			let resp = HttpResponse::NotAcceptable()
+				.content_type("text/html")
+				.body(format!("{err}"));
+			Either::Right(resp)
+		}
+	}
 }

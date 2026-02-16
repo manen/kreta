@@ -3,6 +3,7 @@ use std::{collections::HashMap, hash::Hash};
 use anyhow::{Context, anyhow};
 use kreta_rs::client::{Client, absences::AbsenceRaw};
 
+pub mod html_stats;
 pub mod retreive;
 
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Default)]

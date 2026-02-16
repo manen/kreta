@@ -3,7 +3,7 @@ use std::{
 	hash::{DefaultHasher, Hash, Hasher},
 };
 
-use crate::AbsencesByExcuse;
+use crate::{AbsenceDetails, AbsencesByExcuse, ExcuseType};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Color {
@@ -29,9 +29,22 @@ pub fn hash_to_color<T: Hash>(value: &T) -> Color {
 	}
 }
 
-/// creates a component to be placed within an html frame
 pub fn by_excuse_type(data: &AbsencesByExcuse) -> String {
-	let cols = data.absences.iter().map(|(ty, details)| {
+	let mut sorted = data.absences.iter().collect::<Vec<_>>();
+	sorted.sort_by(|(_, a), (_, b)| {
+		a.hours
+			.partial_cmp(&b.hours)
+			.unwrap_or(std::cmp::Ordering::Equal)
+	});
+
+	by_excuse_type_unsorted(sorted.iter().copied())
+}
+
+/// creates a component to be placed within an html frame
+pub fn by_excuse_type_unsorted<'a>(
+	data: impl Iterator<Item = (&'a ExcuseType, &'a AbsenceDetails)>,
+) -> String {
+	let cols = data.map(|(ty, details)| {
 		let col_height = (details.hours * 0.6) as i32;
 		let col_width = 5.0;
 		let col_color = hash_to_color(ty);
@@ -44,9 +57,9 @@ pub fn by_excuse_type(data: &AbsencesByExcuse) -> String {
 					{ty}
 				</div>
 				<div style=\"height: {col_height}em; width: {col_width}em; background-color: {col_color};\">
-					<div style=\"display: flex; justify-content: center; color: white;\">
+					<div style=\"display: flex; justify-content: center; color: white; padding: 0.2rem; font-weight: bold\">
 						{col_text}
-						</div>
+					</div>
 				</div>
 			</div>"
 		);

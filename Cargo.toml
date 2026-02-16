@@ -12,7 +12,7 @@ members = [
 ]
 
 [workspace.dependencies]
-kreta-rs = { path = "./kreta-rs", default-features = false }
+kreta-rs = { path = "./kreta-rs" }
 kreta-combine.path = "./kreta-combine"
 timetable-to-ical = { path = "./timetable-to-ical", features = ["serde"] }
 timetable-to-ical-server.path = "./timetable-to-ical-server"

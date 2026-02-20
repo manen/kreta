@@ -13,7 +13,7 @@ combine = ["timetable-to-ical/combine"]
 absence-analyzer = ["dep:absence-analyzer"]
 
 [dependencies]
-actix-web = { version = "4.12.1", features = ["rustls"] }
+actix-web = { version = "4.13.0", features = ["rustls"] }
 anyhow.workspace = true
 tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
 chrono.workspace = true

@@ -67,7 +67,7 @@ fn push_to_absence_buf<K: Hash + Eq>(
 }
 
 pub fn absences_by_excuse_type_opt<'a>(
-	absences: impl Iterator<Item = &'a AbsenceRaw>,
+	absences: impl IntoIterator<Item = &'a AbsenceRaw>,
 ) -> HashMap<Option<ExcuseType>, AbsenceDetails> {
 	let mut buf = HashMap::new();
 
@@ -95,7 +95,7 @@ pub fn absences_by_excuse_type_opt<'a>(
 	buf
 }
 pub fn absences_by_excuse_type<'a>(
-	absences: impl Iterator<Item = &'a AbsenceRaw>,
+	absences: impl IntoIterator<Item = &'a AbsenceRaw>,
 ) -> AbsencesByExcuse {
 	let opt = absences_by_excuse_type_opt(absences);
 	let absences = opt

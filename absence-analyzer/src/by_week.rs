@@ -4,7 +4,7 @@ use anyhow::Context;
 use chrono::{DateTime, Datelike, Duration, Utc};
 use kreta_rs::client::absences::AbsenceRaw;
 
-use crate::retreive::last_september_first_expl;
+use crate::{AbsencesByExcuse, retreive::last_september_first_expl};
 
 /// denotes which week a date is in from september 1st
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
@@ -81,9 +81,10 @@ mod tests {
 
 // ----
 
-pub fn split_by_week(
-	iter: impl IntoIterator<Item = AbsenceRaw>,
-) -> anyhow::Result<HashMap<WeekNum, Vec<AbsenceRaw>>> {
+pub type AbsencesByWeek = HashMap<WeekNum, Vec<AbsenceRaw>>;
+pub type AbsencesByWeekAndExcuse = HashMap<WeekNum, AbsencesByExcuse>;
+
+pub fn split_by_week(iter: impl IntoIterator<Item = AbsenceRaw>) -> anyhow::Result<AbsencesByWeek> {
 	let mut buf = HashMap::new();
 
 	for absence in iter {
@@ -100,4 +101,15 @@ pub fn split_by_week(
 	}
 
 	Ok(buf)
+}
+
+pub fn split_by_week_and_excuse(
+	iter: impl IntoIterator<Item = AbsenceRaw>,
+) -> anyhow::Result<AbsencesByWeekAndExcuse> {
+	let by_week = split_by_week(iter).with_context(|| "failed to split by week")?;
+	let by_excuse = by_week
+		.into_iter()
+		.map(|(week, data)| (week, crate::absences_by_excuse_type(data.iter())));
+
+	Ok(by_excuse.collect())
 }

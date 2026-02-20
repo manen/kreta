@@ -7,6 +7,8 @@ mod col_by_type;
 pub use col_by_type::*;
 mod total;
 pub use total::*;
+mod line_by_week;
+pub use line_by_week::*;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Color {

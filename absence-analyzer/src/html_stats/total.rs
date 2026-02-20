@@ -1,20 +1,36 @@
-use crate::AbsencesByExcuse;
+use kreta_rs::client::absences::AbsenceRaw;
 
-pub fn html_stats_content(data: &AbsencesByExcuse) -> String {
-	let graph = super::by_excuse_type(data);
-	let forecast = forecast_html(data);
+use crate::{AbsencesByExcuse, absences_by_excuse_type, by_week::split_by_week_and_excuse};
+
+pub fn html_stats_content(iter: &[AbsenceRaw]) -> String {
+	let by_excuse = absences_by_excuse_type(iter);
+
+	let graph = super::by_excuse_type(&by_excuse);
+	let forecast = forecast_html(&by_excuse);
+
+	let line_graph = {
+		let by_week = split_by_week_and_excuse(iter.iter().cloned());
+		let line_graph = by_week.map(|a| super::line_by_week(&a));
+
+		line_graph.unwrap_or_else(|err| {
+			format!(
+				"could not create line graph due to an error while splitting up absences by week:\n{err}"
+			)
+		})
+	};
 
 	format!(
 		"
 		<div style=\"font-size: 0.85rem;\">
 			{graph}
 		</div>
-		\n\n{forecast}"
+		\n\n{forecast}
+		\n\n{line_graph}"
 	)
 }
 
 const FRAME: &'static str = include_str!("./frame.html");
-pub fn html_stats(data: &AbsencesByExcuse) -> String {
+pub fn html_stats(data: &[AbsenceRaw]) -> String {
 	let content = html_stats_content(data);
 	FRAME.replace("{content}", &content)
 }

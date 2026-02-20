@@ -31,8 +31,7 @@ pub async fn generic_absences(
 			absences
 		};
 
-		let absences = absence_analyzer::absences_by_excuse_type(absences_raw.iter());
-		let html = absence_analyzer::html_stats::html_stats(&absences);
+		let html = absence_analyzer::html_stats::html_stats(&absences_raw);
 
 		Ok(Html::new(html))
 	}

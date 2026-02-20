@@ -13,6 +13,8 @@ impl Client {
 	/// from & to are both yyyy-mm-dd
 	/// maximum distance is 3 weeks
 	pub async fn absences(&self, from: &str, to: &str) -> anyhow::Result<Vec<AbsenceRaw>> {
+		// println!("fetching absences between {from} and {to}");
+
 		use anyhow::Context;
 
 		let url = format!(
@@ -55,7 +57,12 @@ impl Client {
 	) -> impl futures::Stream<Item = anyhow::Result<Vec<AbsenceRaw>>> {
 		use futures::stream::FuturesUnordered;
 
-		let timesplit = timerange::range(from, to, chrono::Duration::weeks(3));
+		let timesplit = timerange::range(
+			from,
+			to,
+			chrono::Duration::weeks(3),
+			chrono::Duration::days(1),
+		);
 
 		let mut stream = FuturesUnordered::new();
 		stream.extend(timesplit.map(|(from, to)| async move {

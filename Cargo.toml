@@ -20,7 +20,7 @@ credsign.path = "./credsign"
 timerange.path = "./timerange"
 absence-analyzer.path = "./absence-analyzer"
 
-anyhow = "1.0.101"
+anyhow = "1.0.102"
 base64 = "0.22.1"
 rand = "0.10.0"
 reqwest = { version = "0.13.2", default-features = false, features = [

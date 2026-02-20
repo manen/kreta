@@ -4,6 +4,9 @@ use kreta_rs::client::{Client, absences::AbsenceRaw};
 
 pub fn last_september_first() -> DateTime<Utc> {
 	let now = Utc::now();
+	last_september_first_expl(now)
+}
+pub fn last_september_first_expl(now: DateTime<Utc>) -> DateTime<Utc> {
 	let year = if now.month() > 9 || (now.month() == 9 && now.day() >= 1) {
 		now.year()
 	} else {

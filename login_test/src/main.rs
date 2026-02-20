@@ -35,11 +35,20 @@ async fn absences_analyze() -> anyhow::Result<()> {
 		}
 	};
 
-	let data = absence_analyzer::absences_by_excuse_type(absences.iter());
+	let weeks = absence_analyzer::split_by_week(absences)?;
+	let data = weeks
+		.into_iter()
+		.map(|(week, data)| (week, absence_analyzer::absences_by_excuse_type(data.iter())));
+	let mut data = data.collect::<Vec<_>>();
+	data.sort_by(|(a, _), (b, _)| a.cmp(&b));
+
 	println!("{data:#?}");
 
-	let html = absence_analyzer::html_stats::html_stats(&data);
-	tokio::fs::write("./absences.html", &html).await?;
+	// let data = absence_analyzer::absences_by_excuse_type(absences.iter());
+	// println!("{data:#?}");
+
+	// let html = absence_analyzer::html_stats::html_stats(&data);
+	// tokio::fs::write("./absences.html", &html).await?;
 
 	Ok(())
 }

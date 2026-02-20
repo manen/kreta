@@ -81,6 +81,15 @@ pub fn absences_by_excuse_type_opt<'a>(
 			}
 		};
 
+		// match &absence.late_by_minutes {
+		// 	&Some(_) => {
+		// 		println!(
+		// 			"counting {:?} minutes {excuse_type:?} from {}",
+		// 			absence.late_by_minutes, absence.date
+		// 		);
+		// 	}
+		// 	_ => {}
+		// }
 		push_to_absence_buf(&mut buf, excuse_type, absence.late_by_minutes);
 	}
 	buf

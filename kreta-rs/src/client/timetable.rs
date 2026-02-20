@@ -49,7 +49,12 @@ impl Client {
 	) -> impl futures::Stream<Item = anyhow::Result<Vec<LessonRaw>>> {
 		use futures::stream::FuturesUnordered;
 
-		let timesplit = timerange::range(from, to, chrono::Duration::days(30));
+		let timesplit = timerange::range(
+			from,
+			to,
+			chrono::Duration::days(30),
+			chrono::Duration::days(1),
+		);
 
 		let mut stream = FuturesUnordered::new();
 		stream.extend(timesplit.map(|(from, to)| async move {

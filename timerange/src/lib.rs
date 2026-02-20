@@ -1,11 +1,14 @@
 use chrono::{DateTime, TimeZone};
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
+/// iterator that splits up time into pieces with a maximum size and optional distance in between
 pub struct Timesplit<Tz: TimeZone> {
 	i: chrono::DateTime<Tz>,
 	end: chrono::DateTime<Tz>,
 
 	max_dur: chrono::Duration,
+	/// the amount of time between a `to` output and the next `from` output
+	gap: chrono::Duration,
 }
 impl<Tz: TimeZone> Iterator for Timesplit<Tz> {
 	type Item = (chrono::DateTime<Tz>, chrono::DateTime<Tz>);
@@ -24,7 +27,7 @@ impl<Tz: TimeZone> Iterator for Timesplit<Tz> {
 		if from >= to {
 			return None;
 		}
-		self.i = to.clone();
+		self.i = to.clone() + self.gap;
 
 		Some((from, to))
 	}
@@ -36,11 +39,13 @@ pub fn range<Tz: TimeZone>(
 	from: DateTime<Tz>,
 	to: DateTime<Tz>,
 	max_duration: chrono::Duration,
+	gap: chrono::Duration,
 ) -> Timesplit<Tz> {
 	Timesplit {
 		i: from,
 		end: to,
 		max_dur: max_duration,
+		gap,
 	}
 }
 
@@ -62,7 +67,12 @@ mod tests {
 		let end = dateparser::parse_with_timezone("2025-10-08 00:01:00", &Utc).unwrap();
 		let max_dur = chrono::Duration::hours(12);
 
-		let timesplit = Timesplit { i, end, max_dur };
+		let timesplit = Timesplit {
+			i,
+			end,
+			max_dur,
+			gap: chrono::Duration::zero(),
+		};
 
 		let timesplit = timesplit.collect::<Vec<_>>();
 

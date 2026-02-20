@@ -35,13 +35,19 @@ pub fn line_by_week(data: &AbsencesByWeekAndExcuse) -> String {
 	// --
 
 	// svg
+	let view_width = 100.0;
+	let view_height = 50.0;
 	let view_box = "0 0 100 100";
+
+	let weeknum_to_x = |weeknum| (weeknum as f32 / highest_weeknum as f32) * view_width;
+	let hours_to_y =
+		|hours| view_height - ((hours as f32 / highest_hours_in_a_week as f32) * view_height);
 
 	// for all excuse types, check every week for how many hours of that type happened
 	// if none, put zero
 	//
 	// if done, turn the weeknum and hours into coordinates and create the polyline svg element
-	let lines = all_excuse_types.iter().cloned().map(|excuse_type| {
+	let data_points = all_excuse_types.iter().cloned().map(|excuse_type| {
 		let points = by_weeks_sorted
 			.iter()
 			.map(|(weeknum, absences)| {
@@ -53,18 +59,14 @@ pub fn line_by_week(data: &AbsencesByWeekAndExcuse) -> String {
 				(*weeknum, hours)
 			})
 			.map(|(weeknum, hours)| {
-				format!(
-					"{},{}",
-					(weeknum.take() as f32 / highest_weeknum as f32) * 100.0,
-					100.0 - ((hours as f32 / highest_hours_in_a_week as f32) * 100.0)
-				)
+				format!("{},{}", weeknum_to_x(weeknum.take()), hours_to_y(hours))
 			})
 			.collect::<Vec<String>>()
 			.join(" ");
 
 		let fill = "none";
 		let color = hash_to_color(&excuse_type);
-		let width = 1;
+		let width = 0.7;
 		let points = points;
 
 		let polyline = format!(
@@ -72,13 +74,49 @@ pub fn line_by_week(data: &AbsencesByWeekAndExcuse) -> String {
 		);
 		polyline
 	});
-	let lines = lines.collect::<String>();
+	let data_points = data_points.collect::<String>();
+
+	let undescriptive_gray = "rgb(107,107,107)";
+	let undescriptive_gray_darker = "rgb(67,67,67)";
+	let weeknum_guidelines = (0..highest_weeknum).map(|weeknum| {
+		let x = weeknum_to_x(weeknum);
+
+		let fill = "none";
+		let color = undescriptive_gray_darker;
+		// let width = if weeknum % 10 != 0 { 0.025 } else { 0.05 };
+		let width = 0.025;
+		let points = format!("{x},0 {x},{view_height}");
+
+		format!(
+			"<polyline fill=\"{fill}\" stroke=\"{color}\" stroke-width=\"{width}\" points=\"{points}\" />"
+		)
+	});
+	let hour_guideline_frequency = 5;
+	let hour_guidelines = (0..(highest_hours_in_a_week as i32 / hour_guideline_frequency)
+		+ hour_guideline_frequency)
+		.map(|hour| {
+			let hour = hour * hour_guideline_frequency;
+			let y = hours_to_y(hour as f32);
+
+			let fill = "none";
+			let color = undescriptive_gray;
+			let width = if hour % 10 == 0 { 0.06 } else { 0.015 };
+			let points = format!("0,{y} {view_width},{y}");
+
+			format!(
+				"<polyline fill=\"{fill}\" stroke=\"{color}\" stroke-width=\"{width}\" points=\"{points}\" />"
+			)
+		});
+	let guidelines = weeknum_guidelines
+		.chain(hour_guidelines)
+		.collect::<String>();
 
 	let svg = format!(
 		"
 		<div style=\"display: flex; align-items: center; flex-direction: column; margin: 1rem;\">
 			<svg viewBox=\"{view_box}\" style=\"width: 80rem; max-width: 100%; max-height: 100%;\">
-				{lines}
+				{guidelines}
+				{data_points}
 			</svg>
 		</div>
 		"

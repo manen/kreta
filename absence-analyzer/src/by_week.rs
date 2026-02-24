@@ -35,16 +35,11 @@ impl WeekNum {
 
 		Self(diff_weeks)
 	}
-	pub fn into_range_expl(
-		self,
-		sept_1: DateTime<Utc>,
-	) -> (chrono::DateTime<Utc>, chrono::DateTime<Utc>) {
+	pub fn get_monday_expl(self, sept_1: DateTime<Utc>) -> chrono::DateTime<Utc> {
 		let sept_1_monday = sept_1 - Duration::days(sept_1.weekday().num_days_from_monday() as _);
-
 		let date_monday = sept_1_monday + Duration::weeks(self.0 as _);
-		let date_sunday = date_monday + Duration::days(6);
 
-		(date_monday, date_sunday)
+		date_monday
 	}
 
 	pub fn take(self) -> u32 {
@@ -59,6 +54,8 @@ impl Display for WeekNum {
 
 #[cfg(test)]
 mod tests {
+	use chrono::Weekday;
+
 	use super::*;
 
 	#[test]
@@ -66,15 +63,15 @@ mod tests {
 		let base: DateTime<Utc> = "2025-10-03T12:00:00Z".parse().unwrap();
 		let sept_1 = last_september_first_expl(base);
 
-		let iter = 0..500;
-		let iter = iter.map(|n| base + Duration::days(n));
+		let iter = 0..(500 * 24);
+		let iter = iter.map(|n| base + Duration::hours(n));
 
 		for date in iter {
 			let weeknum = WeekNum::from_date(date);
-			let (from, to) = weeknum.into_range_expl(sept_1);
+			let monday = weeknum.get_monday_expl(sept_1);
 
-			println!("{} < {} < {}    <- this should be true", from, date, to);
-			assert!(!(date < from || date > to))
+			let weekday = monday.weekday();
+			assert_eq!(weekday, Weekday::Mon);
 		}
 	}
 }

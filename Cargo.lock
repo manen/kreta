@@ -1731,6 +1731,7 @@ dependencies = [
  "absence-analyzer",
  "anyhow",
  "chrono",
+ "chrono-tz",
  "kreta-rs",
  "timetable-to-ical",
  "tokio",

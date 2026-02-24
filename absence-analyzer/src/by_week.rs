@@ -72,6 +72,9 @@ mod tests {
 
 			let weekday = monday.weekday();
 			assert_eq!(weekday, Weekday::Mon);
+
+			let regenerated_weeknum = WeekNum::from_date(monday);
+			assert_eq!(weeknum, regenerated_weeknum)
 		}
 	}
 }

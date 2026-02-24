@@ -1,7 +1,8 @@
 #![allow(unused)]
 
 use anyhow::Context;
-use chrono::TimeZone;
+use chrono::{TimeZone, Utc};
+use chrono_tz::Europe::Budapest;
 use kreta_rs::{client::Client, login::LoginFlow};
 
 mod creds_from_file;
@@ -14,7 +15,72 @@ fn main() {
 		.build()
 		.unwrap();
 
-	rt.block_on(absences_analyze()).unwrap()
+	rt.block_on(fucking_query_limits()).unwrap()
+}
+
+/// kreta fucking limits query times so we have to send multiple requests for a single type of request
+/// and it seems like it's inconsistent whether it treats the request end date as the last included day
+/// or the first day that's not included
+async fn fucking_query_limits() -> anyhow::Result<()> {
+	let credentials = creds_from_file::read_from_file("./credentials.txt").await?;
+	let client = Client::full_login(&credentials).await?;
+
+	let (from, to) = ("2026-02-16", "2026-02-23");
+
+	let timetable = client.timetable(from, to).await?;
+	let homework = client.homework(from, to).await?;
+	let exams = client.exams(from, to).await?;
+	let absences = client.absences(from, to).await?;
+
+	let timetable_included = timetable
+		.iter()
+		.filter(|a| a.start_time.contains(to))
+		.count();
+	let homework_included = homework
+		.iter()
+		.filter(|a| {
+			let date: chrono::DateTime<Utc> = a.date_deadline.parse().expect("fuck parsing dates");
+			let date = date.with_timezone(&Budapest);
+
+			let date = date.format("%Y-%m-%d").to_string();
+
+			date == to
+		})
+		.count();
+	let exams_included = exams
+		.iter()
+		.filter(|a| {
+			let date: chrono::DateTime<Utc> = a.date.parse().expect("fuck parsing dates");
+			let date = date.with_timezone(&Budapest);
+
+			let date = date.format("%Y-%m-%d").to_string();
+
+			date == to
+		})
+		.count();
+	let absences_included = absences
+		.iter()
+		.filter(|a| a.lesson.start_time.contains(to))
+		.count();
+
+	dbg!(
+		timetable_included,
+		homework_included,
+		exams_included,
+		absences_included
+	);
+
+	// output i got as of 2026.02.24:
+	//
+	// [login_test/src/main.rs:61:2] timetable_included = 0
+	// [login_test/src/main.rs:61:2] homework_included = 1
+	// [login_test/src/main.rs:61:2] exams_included = 1
+	// [login_test/src/main.rs:61:2] absences_included = 2
+
+	// this means only timetable is treated as the first day not included
+	// kreta is stupid
+
+	Ok(())
 }
 
 async fn absences_analyze() -> anyhow::Result<()> {

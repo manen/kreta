@@ -53,7 +53,7 @@ impl Client {
 			from,
 			to,
 			chrono::Duration::days(30),
-			chrono::Duration::days(1),
+			chrono::Duration::days(0),
 		);
 
 		let mut stream = FuturesUnordered::new();

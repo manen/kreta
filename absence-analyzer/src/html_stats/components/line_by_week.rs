@@ -1,7 +1,9 @@
 use std::collections::HashSet;
 
+use kreta_rs::client::absences::AbsenceRaw;
+
 use crate::{
-	by_week::{AbsencesByWeekAndExcuse, WeekNum},
+	by_week::{AbsencesByWeekAndExcuse, WeekNum, split_by_week_and_excuse},
 	html_stats::hash_to_color,
 };
 
@@ -121,4 +123,19 @@ pub fn line_by_week(
 	);
 
 	svg
+}
+
+/// -- html
+pub fn line_graph(
+	absences_raw: impl Iterator<Item = AbsenceRaw>,
+	today: chrono::DateTime<chrono::Utc>,
+) -> String {
+	let by_week = split_by_week_and_excuse(absences_raw);
+	let line_graph = by_week.map(|a| super::line_by_week(&a, today));
+
+	line_graph.unwrap_or_else(|err| {
+		format!(
+			"could not create line graph due to an error while splitting up absences by week:\n{err}"
+		)
+	})
 }

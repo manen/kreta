@@ -1,5 +1,4 @@
-use super::*;
-use crate::{AbsenceDetails, AbsencesByExcuse, ExcuseType};
+use crate::{AbsenceDetails, AbsencesByExcuse, ExcuseType, html_stats::hash_to_color};
 
 pub fn by_excuse_type(data: &AbsencesByExcuse) -> String {
 	// sort types by absence hours

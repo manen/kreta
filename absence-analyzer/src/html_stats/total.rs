@@ -17,7 +17,7 @@ pub fn html_stats_content(
 	let graph = super::by_excuse_type(&by_excuse);
 	let forecast = forecast_html(&by_excuse);
 
-	let line_graph = line_graph(absences_raw.iter().cloned());
+	let line_graph = line_graph(absences_raw.iter().cloned(), today);
 
 	format!(
 		"
@@ -27,9 +27,12 @@ pub fn html_stats_content(
 	)
 }
 
-pub fn line_graph(absences_raw: impl Iterator<Item = AbsenceRaw>) -> String {
+pub fn line_graph(
+	absences_raw: impl Iterator<Item = AbsenceRaw>,
+	today: chrono::DateTime<chrono::Utc>,
+) -> String {
 	let by_week = split_by_week_and_excuse(absences_raw);
-	let line_graph = by_week.map(|a| super::line_by_week(&a, chrono::Utc::now()));
+	let line_graph = by_week.map(|a| super::line_by_week(&a, today));
 
 	line_graph.unwrap_or_else(|err| {
 		format!(

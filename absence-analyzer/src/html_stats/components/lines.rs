@@ -1,6 +1,15 @@
 use crate::AbsencesByExcuse;
 
-pub fn forecast_html(data: &AbsencesByExcuse) -> String {
+pub fn hours_total_html(data: &AbsencesByExcuse) -> String {
+	let total_hours: f32 = data.absences.iter().map(|a| a.1.hours).sum();
+	let hours_forecasted = crate::forecast::forecast_value(total_hours);
+
+	let body =
+		format!("Összesen: <span style=\"font-weight: bold;\"> {total_hours:.1} óra </span>");
+	line_common_wrap(&body, 0.2)
+}
+
+pub fn unexcused_hours_html(data: &AbsencesByExcuse) -> String {
 	let forecast = crate::forecast::extract_unexcused_forecast(data);
 
 	let body = match forecast {
@@ -22,10 +31,15 @@ pub fn forecast_html(data: &AbsencesByExcuse) -> String {
 			)
 		}
 	};
+
+	line_common_wrap(&body, 1.0)
+}
+
+fn line_common_wrap(body: &str, half_margin: f32) -> String {
 	format!(
 		"
-		<div style=\"display: flex; align-items: center; flex-direction: column; margin: 1rem;\">
-			<div style=\"margin: 1rem;\">
+		<div style=\"display: flex; align-items: center; flex-direction: column; margin: {half_margin}rem;\">
+			<div style=\"margin: {half_margin}rem;\">
 				{body}
 			</div>
 		</div>"

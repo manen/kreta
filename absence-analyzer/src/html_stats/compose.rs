@@ -14,13 +14,15 @@ pub fn html_stats_content(
 ) -> String {
 	let by_excuse = crate::absences_by_excuse_type(absences_raw);
 
+	let hours_total = components::hours_total_html(&by_excuse);
 	let graph = components::by_excuse_type(&by_excuse);
-	let forecast = components::forecast_html(&by_excuse);
+	let forecast = components::unexcused_hours_html(&by_excuse);
 	let line_graph = components::line_graph(absences_raw.iter().cloned(), today);
 
 	format!(
 		"
-		{graph}
+		{hours_total}
+		\n\n{graph}
 		\n\n{forecast}
 		\n\n{line_graph}"
 	)

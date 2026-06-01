@@ -2,7 +2,7 @@ use crate::AbsencesByExcuse;
 
 pub fn hours_total_html(data: &AbsencesByExcuse) -> String {
 	let total_hours: f32 = data.absences.iter().map(|a| a.1.hours).sum();
-	let hours_forecasted = crate::forecast::forecast_value(total_hours);
+	// let hours_forecasted = crate::forecast::forecast_value(total_hours);
 
 	let body =
 		format!("Összesen: <span style=\"font-weight: bold;\"> {total_hours:.1} óra </span>");

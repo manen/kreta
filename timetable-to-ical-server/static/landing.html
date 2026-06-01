@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
@@ -7,7 +7,7 @@
 
 		<script>
 			window.timetable_to_ical_default_options = JSON.parse(
-				`${""}{%default_options%}`
+				`${""}{%default_options%}`,
 			);
 		</script>
 
@@ -143,8 +143,11 @@
 						});
 						const k8 = await k8_resp.text();
 
-						const url = `${window.location.host}/k8/${k8}/${timetable_type}.ical${options_suffix}`;
-						const webcal_url = `webcal://${url}`;
+						const base_url = `${window.location.host}/k8/${k8}`;
+						const absences_url = `http://${base_url}/absences.html`;
+
+						const ical_url = `${base_url}/${timetable_type}.ical${options_suffix}`;
+						const webcal_url = `webcal://${ical_url}`;
 						window.open(webcal_url, "_blank");
 
 						output.innerHTML = `
@@ -153,14 +156,23 @@
 						a naptár alkalmazásodban az alábbi linket megadva tudod importálni az órarended:
 					</p>
 
-					<code class="output_url">
-						http://${url}
-					</code>
+					<textarea readonly class="output_url" style="width: 100%; margin-bottom: 1rem;"
+					onclick="try {t=document.createElement('textarea');t.value=this.value;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove(); alert('kimásolva'); } catch {} ">
+						http://${ical_url}
+					</textarea>
+					<br />
+
+					<a href="${absences_url}">késési statisztikák megnyitása</a>
 
 					<div class="with_margin">
 						további infók <a href="https://github.com/manen/kreta">a github oldalon</a> vannak
 					</div>
 					`;
+
+						output.scrollIntoView({
+							behavior: "smooth",
+							block: "start",
+						});
 					} catch (err) {
 						output.innerHTML = `gatya hiba történt
 						

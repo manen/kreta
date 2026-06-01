@@ -9,6 +9,7 @@ use crate::clients::Clients;
 pub async fn generic_absences(
 	credentials: &Credentials,
 	clients: web::Data<Mutex<Clients>>,
+	today: chrono::DateTime<chrono::Utc>,
 ) -> anyhow::Result<Html> {
 	#[cfg(feature = "absence-analyzer")]
 	{
@@ -31,7 +32,7 @@ pub async fn generic_absences(
 			absences
 		};
 
-		let html = absence_analyzer::html_stats::html_stats(&absences_raw);
+		let html = absence_analyzer::html_stats::html_stats(&absences_raw, today);
 
 		Ok(Html::new(html))
 	}

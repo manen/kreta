@@ -1,12 +1,17 @@
 use std::collections::HashSet;
 
+use kreta_rs::client::absences::AbsenceRaw;
+
 use crate::{
-	by_week::{AbsencesByWeekAndExcuse, WeekNum},
+	by_week::{AbsencesByWeekAndExcuse, WeekNum, split_by_week_and_excuse},
 	html_stats::hash_to_color,
 };
 
 /// get from crate::by_week::split_by_week_and_excuse
-pub fn line_by_week(data: &AbsencesByWeekAndExcuse) -> String {
+pub fn line_by_week(
+	data: &AbsencesByWeekAndExcuse,
+	today: chrono::DateTime<chrono::Utc>,
+) -> String {
 	let all_excuse_types = data
 		.iter()
 		.flat_map(|(_, a)| a.absences.iter())
@@ -21,12 +26,7 @@ pub fn line_by_week(data: &AbsencesByWeekAndExcuse) -> String {
 		.unwrap_or_default()
 		.ceil();
 
-	let highest_weeknum = data
-		.iter()
-		.map(|(a, _)| *a)
-		.max()
-		.map(WeekNum::take)
-		.unwrap_or_default();
+	let highest_weeknum = WeekNum::from_date(today).take();
 
 	// sort
 	let mut by_weeks_sorted = data.iter().collect::<Vec<_>>();
@@ -123,4 +123,19 @@ pub fn line_by_week(data: &AbsencesByWeekAndExcuse) -> String {
 	);
 
 	svg
+}
+
+/// -- html
+pub fn line_graph(
+	absences_raw: impl Iterator<Item = AbsenceRaw>,
+	today: chrono::DateTime<chrono::Utc>,
+) -> String {
+	let by_week = split_by_week_and_excuse(absences_raw);
+	let line_graph = by_week.map(|a| super::line_by_week(&a, today));
+
+	line_graph.unwrap_or_else(|err| {
+		format!(
+			"could not create line graph due to an error while splitting up absences by week:\n{err}"
+		)
+	})
 }

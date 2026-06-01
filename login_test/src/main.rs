@@ -15,7 +15,7 @@ fn main() {
 		.build()
 		.unwrap();
 
-	rt.block_on(fucking_query_limits()).unwrap()
+	rt.block_on(absences_analyze()).unwrap()
 }
 
 /// kreta fucking limits query times so we have to send multiple requests for a single type of request
@@ -113,7 +113,7 @@ async fn absences_analyze() -> anyhow::Result<()> {
 	// let data = absence_analyzer::absences_by_excuse_type(absences.iter());
 	// println!("{data:#?}");
 
-	let html = absence_analyzer::html_stats::html_stats(&absences);
+	let html = absence_analyzer::html_stats::html_stats(&absences, Utc::now());
 	tokio::fs::write("./absences.html", &html).await?;
 
 	Ok(())

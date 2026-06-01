@@ -65,7 +65,8 @@ pub async fn absences_k8(
 		let credentials = crate::k8::decode_k8(&k8, &signer)
 			.with_context(|| format!("failed to decode k8 {k8}"))?;
 
-		let html = super::generic_absences(&credentials, clients.clone()).await?;
+		let html =
+			super::generic_absences(&credentials, clients.clone(), chrono::Utc::now()).await?;
 		anyhow::Ok(html)
 	};
 	let f = f().await;

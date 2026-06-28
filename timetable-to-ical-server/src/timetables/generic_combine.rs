@@ -20,16 +20,7 @@ pub async fn generic_combine(
 	let (start, end) = range_3w_3w();
 
 	let timetable = {
-		#[cfg(feature = "combine")]
-		{
-			timetable_to_ical::combine::combined_range_calendar_file(&client, start, end, opts)
-				.await?
-		}
-
-		#[cfg(not(feature = "combine"))]
-		{
-			"combine.ical was not enabled on this server at compile time".into()
-		}
+		timetable_to_ical::combine::combined_range_calendar_file(&client, start, end, opts).await?
 	};
 	Ok(timetable)
 }

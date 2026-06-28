@@ -4,6 +4,8 @@ pub mod generic_timetable;
 pub use generic_timetable::generic_timetable;
 pub mod generic_combine;
 pub use generic_combine::generic_combine;
+pub mod generic_archive;
+pub use generic_archive::generic_archive_ical;
 
 pub mod generic_absences;
 pub use generic_absences::generic_absences;

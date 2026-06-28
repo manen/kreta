@@ -11,36 +11,26 @@ pub async fn generic_absences(
 	clients: web::Data<Mutex<Clients>>,
 	today: chrono::DateTime<chrono::Utc>,
 ) -> anyhow::Result<Html> {
-	#[cfg(feature = "absence-analyzer")]
-	{
-		let absences_raw = {
-			let client = {
-				let mut clients = clients.lock().await;
-				clients.client(credentials).await?
-			};
-			let client = client.lock().await;
-
-			let absences = absence_analyzer::retreive::fetch_absences(&client)
-				.await
-				.with_context(|| {
-					format!(
-						"failed to fetch every absence for user {}",
-						credentials.username()
-					)
-				})?;
-
-			absences
+	let absences_raw = {
+		let client = {
+			let mut clients = clients.lock().await;
+			clients.client(credentials).await?
 		};
+		let client = client.lock().await;
 
-		let html = absence_analyzer::html_stats::html_stats(&absences_raw, today);
+		let absences = absence_analyzer::retreive::fetch_absences(&client)
+			.await
+			.with_context(|| {
+				format!(
+					"failed to fetch every absence for user {}",
+					credentials.username()
+				)
+			})?;
 
-		Ok(Html::new(html))
-	}
+		absences
+	};
 
-	#[cfg(not(feature = "absence-analyzer"))]
-	{
-		Ok(Html::new(
-			"absence-analyzer wasn't enabled on this server at compile time",
-		))
-	}
+	let html = absence_analyzer::html_stats::html_stats(&absences_raw, today);
+
+	Ok(Html::new(html))
 }

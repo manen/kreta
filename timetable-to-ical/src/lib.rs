@@ -14,7 +14,6 @@ use kreta_rs::client::{
 pub mod absence_best_guess;
 use absence_best_guess::absence_guess;
 
-#[cfg(feature = "combine")]
 pub mod combine;
 
 pub mod err;

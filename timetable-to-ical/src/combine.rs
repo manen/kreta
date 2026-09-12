@@ -46,12 +46,9 @@ pub async fn combined_range_calendar_file(
 	to: chrono::DateTime<chrono::Utc>,
 	opts: &Options,
 ) -> anyhow::Result<String> {
-	let preprocessed = kreta_combine::get_preprocessed_range(client, from, to)
-		.await
-		.with_context(|| "while calling kreta_combine::get_preprocessed_range")?;
-
 	let (combined, remaining_homework, remaining_exams) =
-		kreta_combine::match_preprocessed_with_remainder(preprocessed)?;
+		// kreta_combine::match_preprocessed_with_remainder(preprocessed)?;
+		kreta_combine::fetch_combined_with_remainder(client, from, to).await?;
 
 	let iter = map_combined(combined.iter(), opts);
 

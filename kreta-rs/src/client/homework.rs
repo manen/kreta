@@ -88,7 +88,7 @@ impl Client {
 	}
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Hash, Serialize, Deserialize)]
 /// as returned by https://[instituteCode].e-kreta.hu/ellenorzo/v3/Sajat/HaziFeladatok
 pub struct HomeworkRaw {
 	#[serde(rename = "Uid")]
@@ -127,7 +127,7 @@ pub struct HomeworkRaw {
 }
 pub use super::timetable::SubjectRaw;
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Hash, Serialize, Deserialize)]
 /// a different data type than the one used for timetables for some fucking reason
 pub struct ClassGroupRaw {
 	#[serde(rename = "Uid")]

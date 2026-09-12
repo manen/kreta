@@ -98,7 +98,7 @@ impl Client {
 	}
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Hash, Serialize, Deserialize)]
 pub struct AbsenceRaw {
 	#[serde(rename = "KeszitesDatuma")]
 	pub date_of_creation: String,
@@ -115,7 +115,7 @@ pub struct AbsenceRaw {
 	pub excuse_type: Option<UidNameAndDescRaw>,
 
 	#[serde(rename = "Ora")]
-	pub lesson: LessonRaw,
+	pub lesson: BriefLessonRaw,
 
 	#[serde(rename = "Mod")]
 	pub mode: UidNameAndDescRaw,
@@ -130,8 +130,9 @@ pub struct AbsenceRaw {
 	#[serde(rename = "Uid")]
 	pub uid: String,
 }
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct LessonRaw {
+/// A shorter version of a struct also called LessonRaw in crate::timetable
+#[derive(Clone, Debug, Hash, Serialize, Deserialize)]
+pub struct BriefLessonRaw {
 	#[serde(rename = "KezdoDatum")]
 	pub start_time: String,
 	#[serde(rename = "VegDatum")]

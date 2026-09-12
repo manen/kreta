@@ -145,7 +145,7 @@ pub struct ClassGroupRaw {
 	#[serde(rename = "Nev")]
 	pub name: String,
 }
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Hash, Serialize, Deserialize)]
 pub struct SubjectRaw {
 	#[serde(rename = "Uid")]
 	pub uid: String,
@@ -157,7 +157,7 @@ pub struct SubjectRaw {
 	pub sort_index: i32,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Hash, Serialize, Deserialize)]
 /// seems to be a reused data structure in the timetable responses
 pub struct UidNameAndDescRaw {
 	#[serde(rename = "Uid")]

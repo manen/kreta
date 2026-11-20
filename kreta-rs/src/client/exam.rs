@@ -1,5 +1,8 @@
 use anyhow::{Context, anyhow};
-use serde::{Deserialize, Serialize};
+
+#[cfg(feature = "timerange")]
+#[cfg(feature = "client")]
+use crate::types::ExamRaw;
 
 #[cfg(feature = "client")]
 use super::Client;
@@ -87,35 +90,3 @@ impl Client {
 		Ok(buf)
 	}
 }
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct ExamRaw {
-	#[serde(rename = "Uid")]
-	pub uid: String,
-	#[serde(rename = "Datum")]
-	pub date: String,
-
-	#[serde(rename = "BejelentesDatuma")]
-	pub date_announced: String,
-	#[serde(rename = "RogzitoTanarNeve")]
-	pub teachers_name: String,
-
-	#[serde(rename = "OrarendiOraOraszama")]
-	/// for the given day (hanyadik ora aznap)
-	pub lesson_index_in_timetable: i32,
-	#[serde(rename = "Tantargy")]
-	pub subject: SubjectRaw,
-	#[serde(rename = "TantargyNeve")]
-	pub subject_name: String,
-
-	#[serde(rename = "Temaja")]
-	pub topic: String,
-	#[serde(rename = "Modja")]
-	pub method: UidNameAndDescRaw,
-
-	#[serde(rename = "OsztalyCsoport")]
-	pub class_group: ClassGroupRaw,
-}
-
-pub use crate::client::homework::ClassGroupRaw;
-pub use crate::client::timetable::{SubjectRaw, UidNameAndDescRaw};

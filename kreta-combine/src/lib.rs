@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 
 use anyhow::Context;
-use kreta_rs::client::{
-	Client, absences::AbsenceRaw, exam::ExamRaw, homework::HomeworkRaw, timetable::LessonRaw,
+use kreta_rs::{
+	client::Client,
+	types::{AbsenceRaw, ExamRaw, HomeworkRaw, LessonRaw},
 };
 
 use crate::hash::{LessonHashByAbsence, LessonHashByHomework};

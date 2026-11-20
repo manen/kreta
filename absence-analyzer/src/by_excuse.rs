@@ -1,7 +1,7 @@
 use std::{collections::HashMap, fmt::Display, hash::Hash};
 
+use crate::AbsenceRaw;
 use anyhow::anyhow;
-use kreta_rs::client::absences::AbsenceRaw;
 
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Default)]
 pub struct AbsenceDetails {

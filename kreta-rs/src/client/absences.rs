@@ -1,11 +1,9 @@
 #[cfg(feature = "timerange")]
 #[cfg(feature = "client")]
 use chrono::Utc;
-use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "client")]
-use crate::client::Client;
-use crate::client::exam::{ClassGroupRaw, SubjectRaw, UidNameAndDescRaw};
+use crate::{client::Client, types::AbsenceRaw};
 
 #[cfg(feature = "client")]
 impl Client {
@@ -96,56 +94,4 @@ impl Client {
 		}
 		Ok(buf)
 	}
-}
-
-#[derive(Clone, Debug, Hash, Serialize, Deserialize)]
-pub struct AbsenceRaw {
-	#[serde(rename = "KeszitesDatuma")]
-	pub date_of_creation: String,
-	#[serde(rename = "Datum")]
-	pub date: String,
-	#[serde(rename = "KesesPercben")]
-	pub late_by_minutes: Option<i32>,
-	#[serde(rename = "OsztalyCsoport")]
-	pub class_group: ClassGroupRaw,
-
-	#[serde(rename = "IgazolasAllapota")]
-	pub excuse_status: String,
-	#[serde(rename = "IgazolasTipusa")]
-	pub excuse_type: Option<UidNameAndDescRaw>,
-
-	#[serde(rename = "Ora")]
-	pub lesson: BriefLessonRaw,
-
-	#[serde(rename = "Mod")]
-	pub mode: UidNameAndDescRaw,
-	#[serde(rename = "Tantargy")]
-	pub subject: SubjectRaw,
-
-	#[serde(rename = "RogzitoTanarNeve")]
-	pub teachers_name: String,
-	#[serde(rename = "Tipus")]
-	pub typ: UidNameAndDescRaw,
-
-	#[serde(rename = "Uid")]
-	pub uid: String,
-}
-/// A shorter version of a struct also called LessonRaw in crate::timetable
-#[derive(Clone, Debug, Hash, Serialize, Deserialize)]
-pub struct BriefLessonRaw {
-	#[serde(rename = "KezdoDatum")]
-	pub start_time: String,
-	#[serde(rename = "VegDatum")]
-	pub end_time: String,
-	#[serde(rename = "Oraszam")]
-	pub oraszam: i32,
-}
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct TypeRaw {
-	#[serde(rename = "Nev")]
-	pub name: String,
-	#[serde(rename = "Kategoria")]
-	pub category: UidNameAndDescRaw,
-	#[serde(rename = "Uid")]
-	pub uid: String,
 }

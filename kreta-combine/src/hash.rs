@@ -2,8 +2,7 @@ use std::hash::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::num::{NonZero, NonZeroU64};
 
-use kreta_rs::client::homework::HomeworkRaw;
-use kreta_rs::client::{absences::BriefLessonRaw, timetable::LessonRaw};
+use kreta_rs::types::{BriefLessonRaw, HomeworkRaw, LessonRaw};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct LessonHashByAbsence(u64);
@@ -35,6 +34,8 @@ impl LessonHashByAbsence {
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 /// apparently homework already has a uid we can use so this is simpler
 pub struct LessonHashByHomework(Option<NonZero<u64>>);
+
+// this impl is faulty because it attaches to the lesson it was given out not the deadline lesson
 impl LessonHashByHomework {
 	pub fn new_from_homework(homework: &HomeworkRaw) -> Self {
 		let mut hasher = DefaultHasher::new();
@@ -56,7 +57,24 @@ impl LessonHashByHomework {
 	}
 }
 
+// impl LessonHashByHomework {
+// 	pub fn new_from_homework(homework: &HomeworkRaw) -> Self {
+// 		let mut hasher = DefaultHasher::new();
+//
+// 		// jo ahhoz hogy ezt normalisan megcsinaljam meg kene csinalni hogy a kretas adat strukturakban ne string legyen az ido hanem proper chrono datetime
+// 		// ami elvileg tud ilyet serdevel
+// 		//
+// 		// de ez kurva nagy valtozas lenne es ezt nem este 10kor fogom elkezdeni ugy hogy meg millioegy dolgom van
+// 		//
+// 		// de utana sokkal egyszerubb lenne minden es itt is pl sokkal konnyebben megnezhetnenk hogy aznapi ora legyen stb stb stb stb joejt
+// 	}
+// 	pub fn new_from_lesson(lesson: &LessonRaw) -> Self {}
+// }
+
 // elvileg mukodik
 // de se az examokat se a homeworkoket nem tudom most tesztelni
 // mert nem irtak be egy darabot se
 // szoval bleehhhh ezt most itt kell hagynom a working directoryba de stagelem vagy commitolom legalabb
+
+// jo beirtak az elso dogat az mukodik de az nincs is benne ebben a hashes systemben
+// az elso hazinal visszaterek

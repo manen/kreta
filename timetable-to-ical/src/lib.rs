@@ -7,9 +7,8 @@ use ics::{
 	Event, ICalendar,
 	properties::{Description, DtEnd, DtStart, Location, Summary},
 };
-use kreta_rs::client::{
-	absences::AbsenceRaw, exam::ExamRaw, homework::HomeworkRaw, timetable::LessonRaw,
-};
+
+use kreta_rs::types::{AbsenceRaw, ExamRaw, HomeworkRaw, LessonRaw};
 
 pub mod absence_best_guess;
 use absence_best_guess::absence_guess;

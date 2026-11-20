@@ -1,6 +1,7 @@
+use crate::AbsenceRaw;
 use anyhow::Context;
 use chrono::{DateTime, Datelike, TimeZone, Utc};
-use kreta_rs::client::{Client, absences::AbsenceRaw};
+use kreta_rs::client::Client;
 
 pub fn last_september_first() -> DateTime<Utc> {
 	let now = Utc::now();

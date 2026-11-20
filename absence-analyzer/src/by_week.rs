@@ -1,8 +1,8 @@
 use std::{collections::HashMap, fmt::Display};
 
+use crate::AbsenceRaw;
 use anyhow::Context;
 use chrono::{DateTime, Datelike, Duration, Utc};
-use kreta_rs::client::absences::AbsenceRaw;
 
 use crate::{AbsencesByExcuse, retreive::last_september_first_expl};
 

@@ -1,5 +1,4 @@
-use kreta_rs::client::absences::AbsenceRaw;
-
+use crate::AbsenceRaw;
 use crate::html_stats::components;
 
 const FRAME: &'static str = include_str!("./frame.html");

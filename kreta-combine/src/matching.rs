@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
-use kreta_rs::client::{absences::AbsenceRaw, exam::ExamRaw, homework::HomeworkRaw};
+use crate::AbsenceRaw;
+use kreta_rs::types::{ExamRaw, HomeworkRaw};
 
 use crate::{
 	CombinedLesson, CombinedTimetable, Preprocessed,

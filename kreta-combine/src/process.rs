@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 
-use kreta_rs::client::{
-	absences::AbsenceRaw, exam::ExamRaw, homework::HomeworkRaw, timetable::LessonRaw,
-};
+use crate::AbsenceRaw;
+use kreta_rs::types::{ExamRaw, HomeworkRaw, LessonRaw};
 
 use crate::hash::{LessonHashByAbsence, LessonHashByHomework};
 

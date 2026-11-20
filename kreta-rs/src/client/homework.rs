@@ -1,5 +1,8 @@
 use anyhow::{Context, anyhow};
-use serde::{Deserialize, Serialize};
+
+#[cfg(feature = "timerange")]
+#[cfg(feature = "client")]
+use crate::types::HomeworkRaw;
 
 #[cfg(feature = "client")]
 use super::Client;
@@ -85,68 +88,5 @@ impl Client {
 		}
 
 		Ok(buf)
-	}
-}
-
-#[derive(Clone, Debug, Hash, Serialize, Deserialize)]
-/// as returned by https://[instituteCode].e-kreta.hu/ellenorzo/v3/Sajat/HaziFeladatok
-pub struct HomeworkRaw {
-	#[serde(rename = "Uid")]
-	pub uid: String,
-
-	#[serde(rename = "Tantargy")]
-	pub subject: SubjectRaw,
-	#[serde(rename = "TantargyNeve")]
-	pub subject_name: String,
-
-	#[serde(rename = "RogzitoTanarNeve")]
-	pub teachers_name: String,
-	#[serde(rename = "Szoveg")]
-	pub text: String,
-
-	#[serde(rename = "FeladasDatuma")]
-	pub date_assigned: String,
-	#[serde(rename = "HataridoDatuma")]
-	pub date_deadline: String,
-	#[serde(rename = "RogzitesIdopontja")]
-	pub date_registered: String,
-
-	#[serde(rename = "IsTanarRogzitette")]
-	pub is_registered_by_teacher: bool,
-	#[serde(rename = "IsTanuloHaziFeladatEnabled")]
-	pub is_student_homework_enabled: bool,
-	#[serde(rename = "IsMegoldva")]
-	pub is_solved: bool,
-	#[serde(rename = "IsBeadhato")]
-	pub is_submittable: bool,
-	#[serde(rename = "IsCsatolasEngedelyezes")]
-	pub is_attachment_enabled: bool,
-
-	#[serde(rename = "OsztalyCsoport")]
-	pub class_group: ClassGroupRaw,
-}
-pub use super::timetable::SubjectRaw;
-
-#[derive(Clone, Debug, Hash, Serialize, Deserialize)]
-/// a different data type than the one used for timetables for some fucking reason
-pub struct ClassGroupRaw {
-	#[serde(rename = "Uid")]
-	uid: String,
-}
-
-impl HomeworkRaw {
-	/// normally, homework text is an html fragment, usuall containing <p>, <a>, and <div> tags.
-	/// this method scrapes out only the text, making it easier on the eyes and easier to read
-	pub fn text_extract(&self) -> String {
-		use scraper::Html;
-
-		let fragment = Html::parse_fragment(&self.text);
-		let text: String = fragment
-			.root_element()
-			.text()
-			.collect::<Vec<_>>()
-			.join("\n");
-
-		text
 	}
 }

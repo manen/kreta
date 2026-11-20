@@ -1,8 +1,6 @@
 use std::collections::HashMap;
 
-use kreta_rs::client::absences::AbsenceRaw;
-
-use crate::{AbsenceDetails, ExcuseType};
+use crate::{AbsenceDetails, AbsenceRaw, ExcuseType};
 
 pub fn most_unexcused_days_html(iter: impl Iterator<Item = AbsenceRaw>) -> String {
 	let days = unexcused_amount_by_date(iter);

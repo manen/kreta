@@ -1,6 +1,5 @@
+use crate::AbsenceRaw;
 use std::collections::HashSet;
-
-use kreta_rs::client::absences::AbsenceRaw;
 
 use crate::{
 	by_week::{AbsencesByWeekAndExcuse, WeekNum, split_by_week_and_excuse},

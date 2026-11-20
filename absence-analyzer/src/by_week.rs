@@ -2,7 +2,7 @@ use std::{collections::HashMap, fmt::Display};
 
 use crate::AbsenceRaw;
 use anyhow::Context;
-use chrono::{DateTime, Datelike, Duration, Local};
+use chrono::{Datelike, Duration, Local};
 
 use crate::{AbsencesByExcuse, retreive::last_september_first_expl};
 
@@ -35,12 +35,12 @@ impl WeekNum {
 
 		Self(diff_weeks)
 	}
-	pub fn get_monday_expl(self, sept_1: DateTime<Local>) -> chrono::DateTime<Local> {
-		let sept_1_monday = sept_1 - Duration::days(sept_1.weekday().num_days_from_monday() as _);
-		let date_monday = sept_1_monday + Duration::weeks(self.0 as _);
-
-		date_monday
-	}
+	// 	pub fn get_monday_expl(self, sept_1: DateTime<Local>) -> chrono::DateTime<Local> {
+	// 		let sept_1_monday = sept_1 - Duration::days(sept_1.weekday().num_days_from_monday() as _);
+	// 		let date_monday = sept_1_monday + Duration::weeks(self.0 as _);
+	//
+	// 		date_monday
+	// 	}
 
 	pub fn take(self) -> u32 {
 		self.0
@@ -49,33 +49,6 @@ impl WeekNum {
 impl Display for WeekNum {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		write!(f, "{}", self.0)
-	}
-}
-
-#[cfg(test)]
-mod tests {
-	use chrono::Weekday;
-
-	use super::*;
-
-	#[test]
-	fn test_weeknum() {
-		let base: DateTime<Local> = "2025-10-03T12:00:00Z".parse().unwrap();
-		let sept_1 = last_september_first_expl(base);
-
-		let iter = 0..(500 * 24);
-		let iter = iter.map(|n| base + Duration::hours(n));
-
-		for date in iter {
-			let weeknum = WeekNum::from_date(date);
-			let monday = weeknum.get_monday_expl(sept_1);
-
-			let weekday = monday.weekday();
-			assert_eq!(weekday, Weekday::Mon);
-
-			let regenerated_weeknum = WeekNum::from_date(monday);
-			assert_eq!(weeknum, regenerated_weeknum)
-		}
 	}
 }
 

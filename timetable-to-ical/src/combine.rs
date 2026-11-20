@@ -1,5 +1,4 @@
 use anyhow::Context;
-use chrono::{DateTime, Local};
 use chrono_tz::Europe::Budapest;
 use ics::{
 	Event, ICalendar,

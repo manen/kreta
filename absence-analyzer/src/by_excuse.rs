@@ -47,7 +47,7 @@ pub struct AbsencesByExcuse {
 	pub absences: HashMap<ExcuseType, AbsenceDetails>,
 }
 
-fn push_to_absence_buf<K: Hash + Eq>(
+pub(crate) fn push_to_absence_buf<K: Hash + Eq>(
 	buf: &mut HashMap<K, AbsenceDetails>,
 	typ: K,
 	minutes: Option<i32>,

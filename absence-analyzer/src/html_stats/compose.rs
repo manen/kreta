@@ -18,12 +18,14 @@ pub fn html_stats_content(
 	let graph = components::by_excuse_type(&by_excuse);
 	let forecast = components::unexcused_hours_html(&by_excuse);
 	let line_graph = components::line_graph(absences_raw.iter().cloned(), today);
+	let most_unexcused_days = components::most_unexcused_days_html(absences_raw.iter().cloned());
 
 	format!(
 		"
 		{hours_total}
 		\n\n{graph}
 		\n\n{forecast}
-		\n\n{line_graph}"
+		\n\n{line_graph}
+		\n\n{most_unexcused_days}"
 	)
 }

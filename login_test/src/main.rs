@@ -34,7 +34,7 @@ async fn fucking_query_limits() -> anyhow::Result<()> {
 
 	let timetable_included = timetable
 		.iter()
-		.filter(|a| a.start_time.contains(to))
+		.filter(|a| a.start_time.format("%Y-%m-%d").to_string() == to)
 		.count();
 	let homework_included = homework
 		.iter()
@@ -182,19 +182,19 @@ async fn execute_login_flow() -> anyhow::Result<()> {
 	Ok(())
 }
 
-async fn gen_timetable() -> anyhow::Result<()> {
-	let credentials = creds_from_file::read_from_file("./credentials.txt").await?;
-	let client = Client::full_login(&credentials).await?;
-
-	let opts = timetable_to_ical::Options {
-		..Default::default()
-	};
-
-	let timetable = client.timetable("2025-10-21", "2025-11-04").await?;
-	let calendar = timetable_to_ical::lessons_to_calendar_file(&timetable, &opts);
-
-	tokio::fs::write("./timetable.ical", &calendar).await?;
-
-	println!("all done");
-	Ok(())
-}
+// async fn gen_timetable() -> anyhow::Result<()> {
+// 	let credentials = creds_from_file::read_from_file("./credentials.txt").await?;
+// 	let client = Client::full_login(&credentials).await?;
+//
+// 	let opts = timetable_to_ical::Options {
+// 		..Default::default()
+// 	};
+//
+// 	let timetable = client.timetable("2025-10-21", "2025-11-04").await?;
+// 	let calendar = timetable_to_ical::lessons_to_calendar_file(&timetable, &opts);
+//
+// 	tokio::fs::write("./timetable.ical", &calendar).await?;
+//
+// 	println!("all done");
+// 	Ok(())
+// }

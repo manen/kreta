@@ -3,6 +3,7 @@ use tokio::sync::Mutex;
 
 use crate::clients::Clients;
 
+pub mod cache;
 pub mod combine;
 
 pub mod clients;
@@ -26,8 +27,6 @@ async fn main() -> anyhow::Result<()> {
 			.app_data(signer.clone())
 			.service(landing::index)
 			.service(landing::styles)
-			.service(timetables::login_base64::timetable_base64)
-			.service(timetables::login_k8::timetable_k8)
 			.service(timetables::login_k8::combine_k8)
 			.service(timetables::login_k8::absences_k8)
 			.service(timetables::login_k8::archive_ical_k8)

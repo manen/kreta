@@ -493,6 +493,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "calhelp"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "ics",
+ "uuid",
+]
+
+[[package]]
 name = "cc"
 version = "1.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3246,9 +3255,9 @@ name = "timetable-to-ical"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "calhelp",
  "chrono",
  "chrono-tz",
- "ics",
  "kreta-combine",
  "kreta-rs",
  "serde",

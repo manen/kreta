@@ -10,10 +10,11 @@ serde = ["dep:serde"]
 
 [dependencies]
 chrono.workspace = true
-ics = "0.5.8"
+# ics.workspace = true
 kreta-rs = { workspace = true }
 kreta-combine.workspace = true
-uuid = { version = "1.29.3", features = ["v4"] }
+uuid.workspace = true
 anyhow.workspace = true
 chrono-tz.workspace = true
 serde = { workspace = true, optional = true }
+calhelp.workspace = true

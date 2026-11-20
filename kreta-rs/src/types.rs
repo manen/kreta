@@ -1,3 +1,4 @@
+use crate::utils::deserialize_local_datetime;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -8,9 +9,9 @@ pub struct LessonRaw {
 	#[serde(rename = "Datum")]
 	pub date: String,
 	#[serde(rename = "KezdetIdopont")]
-	pub start_time: String,
+	pub start_time: crate::Time,
 	#[serde(rename = "VegIdopont")]
-	pub end_time: String,
+	pub end_time: crate::Time,
 	#[serde(rename = "Nev")]
 	pub name: String,
 
@@ -44,10 +45,13 @@ pub struct LessonRaw {
 	#[serde(rename = "BejelentettSzamonkeresUid")]
 	pub announced_exam_uid: Option<String>,
 
-	#[serde(rename = "Letrehozas")]
-	pub created_at: String,
-	#[serde(rename = "UtolsoModositas")]
-	pub last_modified: String,
+	#[serde(rename = "Letrehozas", deserialize_with = "deserialize_local_datetime")]
+	pub created_at: crate::Time,
+	#[serde(
+		rename = "UtolsoModositas",
+		deserialize_with = "deserialize_local_datetime"
+	)]
+	pub last_modified: crate::Time,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

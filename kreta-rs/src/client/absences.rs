@@ -1,6 +1,6 @@
 #[cfg(feature = "timerange")]
 #[cfg(feature = "client")]
-use chrono::Utc;
+use chrono::Local;
 
 #[cfg(feature = "client")]
 use crate::{client::Client, types::AbsenceRaw};
@@ -50,8 +50,8 @@ impl Client {
 	/// needs to be polled to start doing anything
 	pub fn absences_range_stream(
 		&self,
-		from: chrono::DateTime<Utc>,
-		to: chrono::DateTime<Utc>,
+		from: chrono::DateTime<Local>,
+		to: chrono::DateTime<Local>,
 	) -> impl futures::Stream<Item = anyhow::Result<Vec<AbsenceRaw>>> {
 		use futures::stream::FuturesUnordered;
 
@@ -77,8 +77,8 @@ impl Client {
 	/// absence query with no maximum distance between from & to
 	pub async fn absences_range(
 		&self,
-		from: chrono::DateTime<Utc>,
-		to: chrono::DateTime<Utc>,
+		from: chrono::DateTime<Local>,
+		to: chrono::DateTime<Local>,
 	) -> anyhow::Result<Vec<AbsenceRaw>> {
 		use futures::StreamExt as _;
 

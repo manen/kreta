@@ -10,7 +10,7 @@ impl LessonHashByAbsence {
 	pub fn new_from_absence(brief_lesson: &BriefLessonRaw) -> Self {
 		let mut hasher = DefaultHasher::new();
 
-		println!("registering absence with brief lesson {brief_lesson:?}");
+		// println!("registering absence with brief lesson {brief_lesson:?}");
 		brief_lesson.start_time.hash(&mut hasher);
 		brief_lesson.end_time.hash(&mut hasher);
 

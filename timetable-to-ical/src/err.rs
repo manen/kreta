@@ -1,6 +1,6 @@
 use std::fmt::{Debug, Display};
 
-use chrono::Utc;
+use chrono::Local;
 use ics::{
 	Event, ICalendar,
 	properties::{Description, DtEnd, DtStart, Location, Summary},
@@ -11,7 +11,7 @@ pub fn result_as_timetable<E: Display + Debug>(res: Result<String, E>) -> String
 	match res {
 		Ok(a) => a,
 		Err(err) => {
-			let today = Utc::now().date_naive();
+			let today = Local::now().date_naive();
 			let today = today.format("%Y%m%d").to_string();
 
 			let uuid = uuid::Uuid::new_v4();

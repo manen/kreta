@@ -9,7 +9,7 @@ use crate::clients::Clients;
 pub async fn generic_absences(
 	credentials: &Credentials,
 	clients: web::Data<Mutex<Clients>>,
-	today: chrono::DateTime<chrono::Utc>,
+	today: chrono::DateTime<chrono::Local>,
 ) -> anyhow::Result<Html> {
 	let absences_raw = {
 		let client = {

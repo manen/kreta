@@ -1,5 +1,5 @@
 use anyhow::Context;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Local};
 use chrono_tz::Europe::Budapest;
 use ics::{
 	Event, ICalendar,
@@ -42,8 +42,8 @@ pub fn collect_from_combined<'a>(
 
 pub async fn combined_range_calendar_file(
 	client: &Client,
-	from: chrono::DateTime<chrono::Utc>,
-	to: chrono::DateTime<chrono::Utc>,
+	from: chrono::DateTime<chrono::Local>,
+	to: chrono::DateTime<chrono::Local>,
 	opts: &Options,
 ) -> anyhow::Result<String> {
 	let (combined, remaining_homework, remaining_exams) =
@@ -57,13 +57,7 @@ pub async fn combined_range_calendar_file(
 		let uid = uuid::Uuid::new_v4();
 		let uid = format!("{uid}");
 
-		let deadline: DateTime<Utc> = homework.date_deadline.parse().with_context(|| {
-			format!(
-				"while parsing homework deadline {} as a datetime",
-				homework.date_deadline
-			)
-		})?;
-		let deadline_day = deadline.with_timezone(&Budapest);
+		let deadline_day = homework.date_deadline.with_timezone(&Budapest);
 		let deadline_day = deadline_day.format("%Y%m%d").to_string();
 
 		let mut event = Event::new(uid, deadline_day.clone());
@@ -74,14 +68,7 @@ pub async fn combined_range_calendar_file(
 		event.push(DtStart::new(deadline_day.clone()));
 		event.push(DtEnd::new(deadline_day));
 
-		let date_assigned: DateTime<Utc> = homework.date_assigned.parse().with_context(|| {
-			format!(
-				"while parsing homework.date_assigned as DateTime: {}",
-				homework.date_assigned
-			)
-		})?;
-		let date_assigned = date_assigned.with_timezone(&Budapest);
-		let date_assigned = date_assigned.format("%Y %B %d");
+		let date_assigned = homework.date_assigned.format("%Y %B %d");
 
 		let pretty_print = if opts.pretty_print_as_desc {
 			format_args!("\n\n{homework:#?}")
@@ -103,12 +90,7 @@ pub async fn combined_range_calendar_file(
 		let uid = uuid::Uuid::new_v4();
 		let uid = format!("{uid}");
 
-		let date: DateTime<Utc> = exam
-			.date
-			.parse()
-			.with_context(|| format!("while parsing exam date {} as a datetime", exam.date))?;
-		let date = date.with_timezone(&Budapest);
-		let date_day = date.format("%Y%m%d").to_string();
+		let date_day = exam.date.format("%Y%m%d").to_string();
 
 		let mut event = Event::new(uid, date_day.clone());
 		let pretty_print = if opts.pretty_print_as_desc {

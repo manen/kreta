@@ -1,6 +1,6 @@
 use absence_analyzer::retreive::last_september_first;
 use actix_web::web;
-use chrono::Utc;
+use chrono::Local;
 use kreta_rs::login::Credentials;
 use timetable_to_ical::Options;
 use tokio::sync::Mutex;
@@ -18,7 +18,7 @@ pub async fn generic_archive_ical(
 	};
 	let client = client.lock().await;
 
-	let (start, end) = (last_september_first(), Utc::now());
+	let (start, end) = (last_september_first(), Local::now());
 
 	let timetable = {
 		timetable_to_ical::combine::combined_range_calendar_file(&client, start, end, opts).await?

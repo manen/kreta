@@ -13,7 +13,7 @@ client = [
 	"dep:sha2",
 	"dep:serde_json",
 ]
-timerange = ["dep:timerange", "dep:chrono", "dep:futures"]
+timerange = ["dep:timerange", "dep:futures"]
 
 [dependencies]
 anyhow.workspace = true
@@ -29,5 +29,6 @@ serde.workspace = true
 serde_json = { workspace = true, optional = true }
 sha2 = { workspace = true, optional = true }
 timerange = { workspace = true, optional = true }
-chrono = { workspace = true, optional = true }
+chrono = { workspace = true }
+chrono-tz.workspace = true
 futures = { workspace = true, optional = true }

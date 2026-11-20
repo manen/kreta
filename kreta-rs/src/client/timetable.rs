@@ -49,8 +49,8 @@ impl Client {
 	/// so no need for this function to be async
 	pub fn timetable_range_stream(
 		&self,
-		from: chrono::DateTime<chrono::Utc>,
-		to: chrono::DateTime<chrono::Utc>,
+		from: chrono::DateTime<chrono::Local>,
+		to: chrono::DateTime<chrono::Local>,
 	) -> impl futures::Stream<Item = anyhow::Result<Vec<LessonRaw>>> {
 		use futures::stream::FuturesUnordered;
 
@@ -76,8 +76,8 @@ impl Client {
 	/// timetable query with no maximum distance between from & to
 	pub async fn timetable_range(
 		&self,
-		from: chrono::DateTime<chrono::Utc>,
-		to: chrono::DateTime<chrono::Utc>,
+		from: chrono::DateTime<chrono::Local>,
+		to: chrono::DateTime<chrono::Local>,
 	) -> anyhow::Result<Vec<LessonRaw>> {
 		use futures::StreamExt;
 

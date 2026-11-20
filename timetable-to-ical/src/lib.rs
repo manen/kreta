@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use anyhow::Context;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Local};
 use chrono_tz::Europe::Budapest;
 use ics::{
 	Event, ICalendar,
@@ -82,11 +82,11 @@ pub fn lesson_to_event_explicit<'a>(
 	let uid = format!("{uid}");
 
 	let (dtstamp, start_escaped, end_escaped) = {
-		let start: DateTime<Utc> = lesson
+		let start: DateTime<Local> = lesson
 			.start_time
 			.parse()
 			.with_context(|| format!("while parsing {} as a datetime", lesson.start_time))?;
-		let end: DateTime<Utc> = lesson
+		let end: DateTime<Local> = lesson
 			.end_time
 			.parse()
 			.with_context(|| format!("while parsing {} as a datetime", lesson.end_time))?;
@@ -241,13 +241,7 @@ pub fn lesson_to_event_explicit<'a>(
 	}
 	match extra_data.homework {
 		Some(homework) => {
-			let date_assigned: DateTime<Utc> =
-				homework.date_assigned.parse().with_context(|| {
-					format!(
-						"while parsing homework.date_assigned as DateTime: {}",
-						homework.date_assigned
-					)
-				})?;
+			let date_assigned: DateTime<Local> = homework.date_assigned;
 			let date_assigned = date_assigned.with_timezone(&Budapest);
 			let date_assigned = date_assigned.format("%Y %B %d");
 			info += &format!(

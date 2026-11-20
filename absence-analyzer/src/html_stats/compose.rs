@@ -2,14 +2,14 @@ use crate::AbsenceRaw;
 use crate::html_stats::components;
 
 const FRAME: &'static str = include_str!("./frame.html");
-pub fn html_stats(data: &[AbsenceRaw], today: chrono::DateTime<chrono::Utc>) -> String {
+pub fn html_stats(data: &[AbsenceRaw], today: chrono::DateTime<chrono::Local>) -> String {
 	let content = html_stats_content(data, today);
 	FRAME.replace("{content}", &content)
 }
 
 pub fn html_stats_content(
 	absences_raw: &[AbsenceRaw],
-	today: chrono::DateTime<chrono::Utc>,
+	today: chrono::DateTime<chrono::Local>,
 ) -> String {
 	let by_excuse = crate::absences_by_excuse_type(absences_raw);
 

@@ -37,11 +37,7 @@ pub fn unexcused_amount_by_date(
 			_ => continue,
 		}
 
-		let day = absence
-			.date
-			.split('T')
-			.next()
-			.unwrap_or("absence.date is probably incorrect");
+		let day = absence.lesson.start_time.format("").to_string();
 
 		crate::by_excuse::push_to_absence_buf(&mut days, day.to_owned(), absence.late_by_minutes);
 	}

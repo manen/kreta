@@ -85,9 +85,9 @@ pub struct UidNameAndDescRaw {
 #[derive(Clone, Debug, Hash, Serialize, Deserialize)]
 pub struct AbsenceRaw {
 	#[serde(rename = "KeszitesDatuma")]
-	pub date_of_creation: String,
+	pub date_of_creation: crate::Time,
 	#[serde(rename = "Datum")]
-	pub date: String,
+	pub date: crate::Time,
 	#[serde(rename = "KesesPercben")]
 	pub late_by_minutes: Option<i32>,
 	#[serde(rename = "OsztalyCsoport")]
@@ -118,9 +118,9 @@ pub struct AbsenceRaw {
 #[derive(Clone, Debug, Hash, Serialize, Deserialize)]
 pub struct BriefLessonRaw {
 	#[serde(rename = "KezdoDatum")]
-	pub start_time: String,
+	pub start_time: crate::Time,
 	#[serde(rename = "VegDatum")]
-	pub end_time: String,
+	pub end_time: crate::Time,
 	#[serde(rename = "Oraszam")]
 	pub oraszam: i32,
 }
@@ -141,10 +141,10 @@ pub struct ExamRaw {
 	#[serde(rename = "Uid")]
 	pub uid: String,
 	#[serde(rename = "Datum")]
-	pub date: String,
+	pub date: crate::Time,
 
 	#[serde(rename = "BejelentesDatuma")]
-	pub date_announced: String,
+	pub date_announced: crate::Time,
 	#[serde(rename = "RogzitoTanarNeve")]
 	pub teachers_name: String,
 
@@ -184,11 +184,11 @@ pub struct HomeworkRaw {
 	pub text: String,
 
 	#[serde(rename = "FeladasDatuma")]
-	pub date_assigned: String,
+	pub date_assigned: crate::Time,
 	#[serde(rename = "HataridoDatuma")]
-	pub date_deadline: String,
+	pub date_deadline: crate::Time,
 	#[serde(rename = "RogzitesIdopontja")]
-	pub date_registered: String,
+	pub date_registered: crate::Time,
 
 	#[serde(rename = "IsTanarRogzitette")]
 	pub is_registered_by_teacher: bool,
@@ -210,21 +210,4 @@ pub struct HomeworkRaw {
 pub struct ClassGroupRawWithoutName {
 	#[serde(rename = "Uid")]
 	uid: String,
-}
-
-impl HomeworkRaw {
-	/// normally, homework text is an html fragment, usuall containing <p>, <a>, and <div> tags.
-	/// this method scrapes out only the text, making it easier on the eyes and easier to read
-	pub fn text_extract(&self) -> String {
-		use scraper::Html;
-
-		let fragment = Html::parse_fragment(&self.text);
-		let text: String = fragment
-			.root_element()
-			.text()
-			.collect::<Vec<_>>()
-			.join("\n");
-
-		text
-	}
 }

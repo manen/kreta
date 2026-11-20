@@ -7,6 +7,23 @@ use crate::types::HomeworkRaw;
 #[cfg(feature = "client")]
 use super::Client;
 
+impl HomeworkRaw {
+	/// normally, homework text is an html fragment, usuall containing <p>, <a>, and <div> tags.
+	/// this method scrapes out only the text, making it easier on the eyes and easier to read
+	pub fn text_extract(&self) -> String {
+		use scraper::Html;
+
+		let fragment = Html::parse_fragment(&self.text);
+		let text: String = fragment
+			.root_element()
+			.text()
+			.collect::<Vec<_>>()
+			.join("\n");
+
+		text
+	}
+}
+
 #[cfg(feature = "client")]
 impl Client {
 	/// https://nzx.hu/kreta-api/mobileapi/gethomeworks \
@@ -47,8 +64,8 @@ impl Client {
 	/// so no need for this function to be async
 	pub fn homework_range_stream(
 		&self,
-		from: chrono::DateTime<chrono::Utc>,
-		to: chrono::DateTime<chrono::Utc>,
+		from: chrono::DateTime<chrono::Local>,
+		to: chrono::DateTime<chrono::Local>,
 	) -> impl futures::Stream<Item = anyhow::Result<Vec<HomeworkRaw>>> {
 		use futures::stream::FuturesUnordered;
 
@@ -74,8 +91,8 @@ impl Client {
 	/// homework query with no maximum distance between from & to
 	pub async fn homework_range(
 		&self,
-		from: chrono::DateTime<chrono::Utc>,
-		to: chrono::DateTime<chrono::Utc>,
+		from: chrono::DateTime<chrono::Local>,
+		to: chrono::DateTime<chrono::Local>,
 	) -> anyhow::Result<Vec<HomeworkRaw>> {
 		use futures::StreamExt;
 

@@ -34,6 +34,7 @@ serde_json = { package = "serde_json_path_to_error", version = "0.1.5" }
 chrono = { version = "0.4.45", default-features = false, features = [
 	"std",
 	"clock",
+	"serde",
 ] }
 chrono-tz = "0.10.4"
 futures = { version = "0.3.32", default-features = false, features = ["std"] }

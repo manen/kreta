@@ -56,15 +56,19 @@ pub fn range<Tz: TimeZone>(
 mod tests {
 	use std::str::FromStr;
 
-	use chrono::{DateTime, Utc};
+	use chrono::{DateTime, Local};
 
 	use super::*;
 
 	#[test]
 	fn test_name() {
-		let i = dateparser::parse_with_timezone("2025-10-01 00:00:00", &Utc).unwrap();
-		// println!("start: {i:?}");
-		let end = dateparser::parse_with_timezone("2025-10-08 00:01:00", &Utc).unwrap();
+		// let i = dateparser::parse_with_timezone("2025-10-01 00:00:00", &Local).unwrap();
+		// // println!("start: {i:?}");
+		// let end = dateparser::parse_with_timezone("2025-10-08 00:01:00", &Local).unwrap();
+
+		let end = chrono::Local::now();
+		let i = end - chrono::Duration::weeks(1) + chrono::Duration::hours(1);
+
 		let max_dur = chrono::Duration::hours(12);
 
 		let timesplit = Timesplit {
@@ -78,64 +82,64 @@ mod tests {
 
 		let expected = vec![
 			(
-				DateTime::<Utc>::from_str("2025-10-01T00:00:00Z").unwrap(),
-				DateTime::<Utc>::from_str("2025-10-01T12:00:00Z").unwrap(),
+				DateTime::<Local>::from_str("2025-10-01T00:00:00Z").unwrap(),
+				DateTime::<Local>::from_str("2025-10-01T12:00:00Z").unwrap(),
 			),
 			(
-				DateTime::<Utc>::from_str("2025-10-01T12:00:00Z").unwrap(),
-				DateTime::<Utc>::from_str("2025-10-02T00:00:00Z").unwrap(),
+				DateTime::<Local>::from_str("2025-10-01T12:00:00Z").unwrap(),
+				DateTime::<Local>::from_str("2025-10-02T00:00:00Z").unwrap(),
 			),
 			(
-				DateTime::<Utc>::from_str("2025-10-02T00:00:00Z").unwrap(),
-				DateTime::<Utc>::from_str("2025-10-02T12:00:00Z").unwrap(),
+				DateTime::<Local>::from_str("2025-10-02T00:00:00Z").unwrap(),
+				DateTime::<Local>::from_str("2025-10-02T12:00:00Z").unwrap(),
 			),
 			(
-				DateTime::<Utc>::from_str("2025-10-02T12:00:00Z").unwrap(),
-				DateTime::<Utc>::from_str("2025-10-03T00:00:00Z").unwrap(),
+				DateTime::<Local>::from_str("2025-10-02T12:00:00Z").unwrap(),
+				DateTime::<Local>::from_str("2025-10-03T00:00:00Z").unwrap(),
 			),
 			(
-				DateTime::<Utc>::from_str("2025-10-03T00:00:00Z").unwrap(),
-				DateTime::<Utc>::from_str("2025-10-03T12:00:00Z").unwrap(),
+				DateTime::<Local>::from_str("2025-10-03T00:00:00Z").unwrap(),
+				DateTime::<Local>::from_str("2025-10-03T12:00:00Z").unwrap(),
 			),
 			(
-				DateTime::<Utc>::from_str("2025-10-03T12:00:00Z").unwrap(),
-				DateTime::<Utc>::from_str("2025-10-04T00:00:00Z").unwrap(),
+				DateTime::<Local>::from_str("2025-10-03T12:00:00Z").unwrap(),
+				DateTime::<Local>::from_str("2025-10-04T00:00:00Z").unwrap(),
 			),
 			(
-				DateTime::<Utc>::from_str("2025-10-04T00:00:00Z").unwrap(),
-				DateTime::<Utc>::from_str("2025-10-04T12:00:00Z").unwrap(),
+				DateTime::<Local>::from_str("2025-10-04T00:00:00Z").unwrap(),
+				DateTime::<Local>::from_str("2025-10-04T12:00:00Z").unwrap(),
 			),
 			(
-				DateTime::<Utc>::from_str("2025-10-04T12:00:00Z").unwrap(),
-				DateTime::<Utc>::from_str("2025-10-05T00:00:00Z").unwrap(),
+				DateTime::<Local>::from_str("2025-10-04T12:00:00Z").unwrap(),
+				DateTime::<Local>::from_str("2025-10-05T00:00:00Z").unwrap(),
 			),
 			(
-				DateTime::<Utc>::from_str("2025-10-05T00:00:00Z").unwrap(),
-				DateTime::<Utc>::from_str("2025-10-05T12:00:00Z").unwrap(),
+				DateTime::<Local>::from_str("2025-10-05T00:00:00Z").unwrap(),
+				DateTime::<Local>::from_str("2025-10-05T12:00:00Z").unwrap(),
 			),
 			(
-				DateTime::<Utc>::from_str("2025-10-05T12:00:00Z").unwrap(),
-				DateTime::<Utc>::from_str("2025-10-06T00:00:00Z").unwrap(),
+				DateTime::<Local>::from_str("2025-10-05T12:00:00Z").unwrap(),
+				DateTime::<Local>::from_str("2025-10-06T00:00:00Z").unwrap(),
 			),
 			(
-				DateTime::<Utc>::from_str("2025-10-06T00:00:00Z").unwrap(),
-				DateTime::<Utc>::from_str("2025-10-06T12:00:00Z").unwrap(),
+				DateTime::<Local>::from_str("2025-10-06T00:00:00Z").unwrap(),
+				DateTime::<Local>::from_str("2025-10-06T12:00:00Z").unwrap(),
 			),
 			(
-				DateTime::<Utc>::from_str("2025-10-06T12:00:00Z").unwrap(),
-				DateTime::<Utc>::from_str("2025-10-07T00:00:00Z").unwrap(),
+				DateTime::<Local>::from_str("2025-10-06T12:00:00Z").unwrap(),
+				DateTime::<Local>::from_str("2025-10-07T00:00:00Z").unwrap(),
 			),
 			(
-				DateTime::<Utc>::from_str("2025-10-07T00:00:00Z").unwrap(),
-				DateTime::<Utc>::from_str("2025-10-07T12:00:00Z").unwrap(),
+				DateTime::<Local>::from_str("2025-10-07T00:00:00Z").unwrap(),
+				DateTime::<Local>::from_str("2025-10-07T12:00:00Z").unwrap(),
 			),
 			(
-				DateTime::<Utc>::from_str("2025-10-07T12:00:00Z").unwrap(),
-				DateTime::<Utc>::from_str("2025-10-08T00:00:00Z").unwrap(),
+				DateTime::<Local>::from_str("2025-10-07T12:00:00Z").unwrap(),
+				DateTime::<Local>::from_str("2025-10-08T00:00:00Z").unwrap(),
 			),
 			(
-				DateTime::<Utc>::from_str("2025-10-08T00:00:00Z").unwrap(),
-				DateTime::<Utc>::from_str("2025-10-08T00:01:00Z").unwrap(),
+				DateTime::<Local>::from_str("2025-10-08T00:00:00Z").unwrap(),
+				DateTime::<Local>::from_str("2025-10-08T00:01:00Z").unwrap(),
 			),
 		];
 		assert_eq!(timesplit, expected);

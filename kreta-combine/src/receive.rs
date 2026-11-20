@@ -10,8 +10,8 @@ use crate::{
 
 pub async fn get_preprocessed_range(
 	client: &Client,
-	from: chrono::DateTime<chrono::Utc>,
-	to: chrono::DateTime<chrono::Utc>,
+	from: chrono::DateTime<chrono::Local>,
+	to: chrono::DateTime<chrono::Local>,
 ) -> anyhow::Result<Preprocessed> {
 	use futures::StreamExt;
 	let timetable = async {

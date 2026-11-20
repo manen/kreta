@@ -90,7 +90,7 @@ pub async fn absences_k8(
 			.with_context(|| format!("failed to decode k8 {k8}"))?;
 
 		let html =
-			super::generic_absences(&credentials, clients.clone(), chrono::Utc::now()).await?;
+			super::generic_absences(&credentials, clients.clone(), chrono::Local::now()).await?;
 		anyhow::Ok(html)
 	};
 	let f = f().await;

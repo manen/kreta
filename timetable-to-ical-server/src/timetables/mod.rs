@@ -16,11 +16,11 @@ pub mod login_k8;
 pub mod utils_receive_opts;
 pub use utils_receive_opts::OptsParams;
 
-use chrono::{DateTime, NaiveDateTime, NaiveTime, Utc};
+use chrono::Local;
 
 /// one month range centered on today
 fn one_month_range_base() -> (chrono::NaiveDate, chrono::NaiveDate) {
-	let today = Utc::now().date_naive();
+	let today = Local::now().date_naive();
 
 	let start = today - chrono::Duration::days(14);
 	let end = today + chrono::Duration::days(14);
@@ -36,20 +36,25 @@ fn one_month_range() -> (String, String) {
 	)
 }
 
-fn range_3w_3w() -> (chrono::DateTime<Utc>, chrono::DateTime<Utc>) {
-	let (start, end) = {
-		let today = Utc::now().date_naive();
-		let start = today - chrono::Duration::weeks(3);
-		let end = today + chrono::Duration::weeks(3);
-		(start, end)
-	};
-	let time = NaiveTime::from_hms_opt(0, 0, 0).expect("from_hms_opt(0, 0, 0) failed");
+fn range_3w_3w() -> (chrono::DateTime<Local>, chrono::DateTime<Local>) {
+	// 	let (start, end) = {
+	// 		let today = Utc::now().date_naive();
+	// 		let start = today - chrono::Duration::weeks(3);
+	// 		let end = today + chrono::Duration::weeks(3);
+	// 		(start, end)
+	// 	};
+	// 	let time = NaiveTime::from_hms_opt(0, 0, 0).expect("from_hms_opt(0, 0, 0) failed");
+	//
+	// 	let start = NaiveDateTime::new(start, time);
+	// 	let end = NaiveDateTime::new(end, time);
+	//
+	// 	let start = DateTime::from_naive_utc_and_offset(start, Utc);
+	// 	let end = DateTime::from_naive_utc_and_offset(end, Utc);
 
-	let start = NaiveDateTime::new(start, time);
-	let end = NaiveDateTime::new(end, time);
+	let now = Local::now();
 
-	let start = DateTime::from_naive_utc_and_offset(start, Utc);
-	let end = DateTime::from_naive_utc_and_offset(end, Utc);
+	let start = now - chrono::Duration::weeks(3);
+	let end = now + chrono::Duration::weeks(3);
 
 	(start, end)
 }

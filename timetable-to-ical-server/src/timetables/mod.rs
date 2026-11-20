@@ -15,24 +15,6 @@ pub use utils_receive_opts::OptsParams;
 
 use chrono::Local;
 
-/// one month range centered on today
-fn one_month_range_base() -> (chrono::NaiveDate, chrono::NaiveDate) {
-	let today = Local::now().date_naive();
-
-	let start = today - chrono::Duration::days(14);
-	let end = today + chrono::Duration::days(14);
-
-	(start, end)
-}
-
-fn one_month_range() -> (String, String) {
-	let (start, end) = one_month_range_base();
-	(
-		start.format("%Y-%m-%d").to_string(),
-		end.format("%Y-%m-%d").to_string(),
-	)
-}
-
 fn range_3w_3w() -> (chrono::DateTime<Local>, chrono::DateTime<Local>) {
 	// 	let (start, end) = {
 	// 		let today = Utc::now().date_naive();

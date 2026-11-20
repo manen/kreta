@@ -1,6 +1,5 @@
 use std::borrow::Cow;
 
-use anyhow::Context;
 use calhelp::Event;
 use chrono::{DateTime, Local};
 use chrono_tz::Europe::Budapest;
@@ -65,8 +64,6 @@ pub struct ExtraData<'a> {
 	exam: Option<&'a ExamRaw>,
 	absence: Option<&'a AbsenceRaw>,
 }
-
-const FORMAT_DATE: &str = "%Y%m%d";
 
 /// avoid throwing errors if possible
 pub fn lesson_to_event_explicit(

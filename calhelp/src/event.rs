@@ -1,5 +1,3 @@
-use std::{borrow::Cow, fmt::Display};
-
 use chrono::Local;
 use ics::properties::{Description, DtEnd, DtStart, Location, Summary};
 

@@ -61,9 +61,6 @@ pub async fn combined_range_calendar(
 
 	// -- add remaining entries
 	let remaining_homework_iter = remaining_homework.into_iter().map(|(_, homework)| {
-		let uid = uuid::Uuid::new_v4();
-		let uid = format!("{uid}");
-
 		let deadline_day = homework.date_deadline.with_timezone(&Budapest);
 
 		// let mut event = Event::new(uid, deadline_day.clone());

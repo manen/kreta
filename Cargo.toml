@@ -20,16 +20,16 @@ credsign.path = "./credsign"
 timerange.path = "./timerange"
 absence-analyzer.path = "./absence-analyzer"
 
-anyhow = "1.0.103"
-base64 = "0.22.1"
-rand = "0.10.1"
-reqwest = { version = "0.13.4", default-features = false, features = [
+anyhow = "1.0.104"
+base64 = "0.23.1"
+rand = "0.10.4"
+reqwest = { version = "0.13.5", default-features = false, features = [
 	"rustls",
 ] }
-scraper = "0.27.0"
-serde = { version = "1.0.228", features = ["derive"] }
-sha2 = "0.11.0"
-tokio = "1.52.3"
+scraper = "0.29.0"
+serde = { version = "1.0.229", features = ["derive"] }
+sha2 = "0.11.1"
+tokio = "1.54.1"
 serde_json = { package = "serde_json_path_to_error", version = "0.1.5" }
 chrono = { version = "0.4.45", default-features = false, features = [
 	"std",
@@ -37,4 +37,4 @@ chrono = { version = "0.4.45", default-features = false, features = [
 	"serde",
 ] }
 chrono-tz = "0.10.4"
-futures = { version = "0.3.32", default-features = false, features = ["std"] }
+futures = { version = "0.3.34", default-features = false, features = ["std"] }

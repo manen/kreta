@@ -3,7 +3,6 @@ use tokio::sync::Mutex;
 
 use crate::clients::Clients;
 
-pub mod cache;
 pub mod combine;
 
 pub mod clients;

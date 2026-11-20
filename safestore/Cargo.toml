@@ -1,0 +1,12 @@
+[package]
+name = "safestore"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# aescry = "1.0.0"
+anyhow.workspace = true
+base64.workspace = true
+ciborium = "0.2.2"
+# password-auth = "2.0.0"
+serde.workspace = true

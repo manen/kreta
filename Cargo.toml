@@ -11,7 +11,7 @@ members = [
 	"absence-analyzer",
  
 	"timetable-to-ical-server",
-	"login_test",
+	"login_test", "safestore",
 ]
 
 [workspace.dependencies]
@@ -23,6 +23,7 @@ credsign.path = "./credsign"
 timerange.path = "./timerange"
 absence-analyzer.path = "./absence-analyzer"
 calhelp.path = "./calhelp"
+safestore.path = "./safestore"
 
 anyhow = "1.0.104"
 base64 = "0.23.1"
@@ -44,3 +45,4 @@ chrono-tz = "0.10.4"
 futures = { version = "0.3.34", default-features = false, features = ["std"] }
 ics = "0.5.8"
 uuid = { version = "1.29.3", features = ["v4"] }
+age = "0.12.1"

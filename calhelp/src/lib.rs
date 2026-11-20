@@ -7,8 +7,10 @@ mod event;
 pub use event::*;
 
 use ics::ICalendar;
+use serde::{Deserialize, Serialize};
 
 /// owns everything
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Calendar {
 	events: Vec<Event>,
 }

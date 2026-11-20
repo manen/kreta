@@ -1,7 +1,8 @@
 use chrono::Local;
 use ics::properties::{Description, DtEnd, DtStart, Location, Summary};
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Event {
 	summary: Option<String>,
 	dt_start: Option<String>,

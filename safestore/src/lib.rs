@@ -1,0 +1,136 @@
+//! the point is a disk db where i don't even know what's stored
+//! so the name of the entries is a hashed secret and the content is encrypted with that secret
+//!
+//! in the kreta project this secret is most likely the user's password (hashed together with username and whatnot) because we don't have access to it only when a request actually comes in with a k8
+
+use std::{
+	fs::File,
+	io::{ErrorKind, Seek, SeekFrom},
+	path::{Path, PathBuf},
+};
+
+use anyhow::Context;
+use base64::{Engine, prelude::BASE64_URL_SAFE};
+use serde::{Serialize, de::DeserializeOwned};
+
+pub trait DatabaseEntryCompatible: Serialize + DeserializeOwned + Default {}
+impl<T: Serialize + DeserializeOwned + Default> DatabaseEntryCompatible for T {}
+
+/// a branch in a db and child dbs are all of a certain type \
+/// just points to a folder
+pub struct DbBunch<T: DatabaseEntryCompatible> {
+	/// path of dir
+	path: PathBuf,
+	_t: std::marker::PhantomData<T>,
+}
+impl<T: DatabaseEntryCompatible> DbBunch<T> {
+	pub fn new(dir_path: impl Into<PathBuf>) -> anyhow::Result<Self> {
+		let path = dir_path.into();
+
+		std::fs::create_dir_all(&path)
+			.with_context(|| format!("failed to create_dir_all db dir {}", path.display()))?;
+
+		let path = path
+			.canonicalize()
+			.with_context(|| format!("failed to canonicalize dbbunch path {}", path.display()))?;
+
+		std::fs::read_dir(&path)
+			.with_context(|| format!("failed to read db dir {}", path.display()))?;
+
+		Ok(Self {
+			path,
+			_t: Default::default(),
+		})
+	}
+
+	/// entry_id isn't a name but any type of binary input
+	pub fn db(&self, entry_id: &[u8]) -> anyhow::Result<Db<T>> {
+		let b64 = BASE64_URL_SAFE.encode(&entry_id);
+
+		let file_path = self.path.join(format!("{b64}.ssdb"));
+		// let file_path = file_path
+		// 	.canonicalize()
+		// 	.with_context(|| format!("failed to canonicalize {}", file_path.display()))?;
+
+		Db::from_path(&file_path)
+	}
+}
+
+pub struct Db<T: DatabaseEntryCompatible> {
+	file: File,
+	current: T,
+}
+impl<T: DatabaseEntryCompatible> Db<T> {
+	pub(crate) fn from_path(path: impl AsRef<Path>) -> anyhow::Result<Self> {
+		let path = path.as_ref();
+		let file = std::fs::OpenOptions::new()
+			.read(true)
+			.write(true)
+			.open(path);
+
+		// println!("{}", path.display());
+
+		let (file, content) = match file {
+			Ok(mut file) => {
+				// read file
+
+				let bufreader = std::io::BufReader::new(&mut file);
+				let content: T = ciborium::from_reader(bufreader).with_context(|| {
+					format!("failed to read and deserialize db at {}", path.display())
+				})?;
+
+				file.seek(SeekFrom::Start(0)).with_context(|| {
+					format!(
+						"failed to seek back to start of the file after reading file for db at {}",
+						path.display()
+					)
+				})?;
+
+				(file, content)
+			}
+			Err(err) => match err.kind() {
+				ErrorKind::NotFound => {
+					let file_created = std::fs::OpenOptions::new()
+						.read(true)
+						.write(true)
+						.create_new(true)
+						.open(path)
+						.with_context(|| {
+							format!(
+								"the db we're trying to open doesn't exist and it couldn't be created (at {})",
+								path.display()
+							)
+						})?;
+					let default: T = Default::default();
+
+					(file_created, default)
+				}
+				_ => {
+					return Err(err).with_context(|| {
+						format!(
+							"failed to open db at {} but not because it doesn't exist",
+							path.display()
+						)
+					});
+				}
+			},
+		};
+
+		Ok(Self {
+			file,
+			current: content,
+		})
+	}
+
+	pub fn save(&mut self) -> anyhow::Result<()> {
+		self.file
+			.seek(SeekFrom::Start(0))
+			.with_context(|| format!("failed to seek db to start"))?;
+		let bufwriter = std::io::BufWriter::new(&mut self.file);
+
+		ciborium::into_writer(&self.current, bufwriter)
+			.with_context(|| format!("failed to serialize and write db"))?;
+
+		Ok(())
+	}
+}

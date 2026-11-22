@@ -2,6 +2,13 @@
 //! so the name of the entries is a hashed secret and the content is encrypted with that secret
 //!
 //! in the kreta project this secret is most likely the user's password (hashed together with username and whatnot) because we don't have access to it only when a request actually comes in with a k8
+//!
+//! the way it's actually gonna work is that a Db<String> is going to store the string unencrypted
+//! but a Db<Encrypted<String>> is gonna encrypt it so it's done with a wrapper type for simplicity
+//! (and ofc the String is any type that implements DatabaseEntryCompatible)
+
+mod encrypt;
+pub use encrypt::*;
 
 use std::{
 	io::{Cursor, ErrorKind, SeekFrom},

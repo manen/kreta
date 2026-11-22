@@ -1,4 +1,6 @@
-#[derive(Clone, Debug, Hash)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Debug, Hash, Serialize, Deserialize)]
 pub struct Credentials {
 	inst_id: String,
 	username: String,
@@ -23,8 +25,6 @@ impl Credentials {
 		&self.passwd
 	}
 }
-
-use serde::Deserialize;
 
 #[derive(Clone, Debug, Deserialize)]
 #[allow(unused)]

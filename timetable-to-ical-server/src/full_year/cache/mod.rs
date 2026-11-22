@@ -7,7 +7,7 @@ use calhelp::Calendar;
 use chrono::NaiveDate;
 pub use content::*;
 use kreta_rs::{client::Client, login::Credentials};
-use safestore::{Db, DbBunch};
+use safestore::{Db, DbBunch, Encrypted};
 use timetable_to_ical::Options;
 
 // all is left is to create this caches and make it a web::Data variable
@@ -20,7 +20,7 @@ fn user_hash(credentials: &Credentials) -> u64 {
 }
 
 pub struct Caches {
-	bunch: DbBunch<CacheContent>,
+	bunch: DbBunch<Encrypted<CacheContent>>,
 }
 impl Caches {
 	/// hardcoded path from cwd like the .k8 file
@@ -39,7 +39,10 @@ impl Caches {
 		Ok(Self { bunch })
 	}
 
-	pub async fn db_for_user(&self, credentials: &Credentials) -> anyhow::Result<Db<CacheContent>> {
+	pub async fn db_for_user(
+		&self,
+		credentials: &Credentials,
+	) -> anyhow::Result<Db<Encrypted<CacheContent>>> {
 		let user_hash = user_hash(&credentials);
 		let entry_id = user_hash.to_le_bytes();
 		let db =
@@ -49,6 +52,46 @@ impl Caches {
 
 		Ok(db)
 	}
+}
+
+pub async fn assemble_full_year_from_encrypted_cache(
+	cache: &mut Encrypted<CacheContent>,
+	fresh_from: NaiveDate,
+	fresh_to: NaiveDate,
+	credentials: &Credentials,
+	client: &Client,
+	opts: &Options,
+	fresh_update_if_older: chrono::Duration,
+	stale_update_if_older: chrono::Duration,
+) -> anyhow::Result<Calendar> {
+	let calendar = cache
+		.with_mut_async(credentials, async |cache| {
+			assemble_full_year_from_cache(
+				cache,
+				fresh_from,
+				fresh_to,
+				client,
+				opts,
+				fresh_update_if_older,
+				stale_update_if_older,
+			)
+			.await
+		})
+		.await
+		.with_context(|| {
+			format!(
+				"failed to mutate Encrypted<CacheContent> for user {}",
+				credentials.username()
+			)
+		})?
+		.with_context(|| {
+			format!(
+				"failed to assembe full year from cache for user {}",
+				credentials.username()
+			)
+		})?;
+
+	Ok(calendar)
 }
 
 pub async fn assemble_full_year_from_cache(
@@ -85,9 +128,10 @@ pub async fn assemble_full_year_from_cache(
 	anyhow::Ok(calendar)
 }
 pub async fn assemble_full_year_from_db(
-	db: &mut Db<CacheContent>,
+	db: &mut Db<Encrypted<CacheContent>>,
 	fresh_from: NaiveDate,
 	fresh_to: NaiveDate,
+	credentials: &Credentials,
 	client: &Client,
 	opts: &Options,
 	fresh_update_if_older: chrono::Duration,
@@ -95,10 +139,11 @@ pub async fn assemble_full_year_from_db(
 ) -> anyhow::Result<Calendar> {
 	let calendar = db
 		.with_mut(async |cache| {
-			assemble_full_year_from_cache(
+			assemble_full_year_from_encrypted_cache(
 				cache,
 				fresh_from,
 				fresh_to,
+				credentials,
 				client,
 				opts,
 				fresh_update_if_older,

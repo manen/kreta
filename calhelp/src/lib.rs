@@ -10,7 +10,7 @@ use ics::ICalendar;
 use serde::{Deserialize, Serialize};
 
 /// owns everything
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, Default)]
 pub struct Calendar {
 	events: Vec<Event>,
 }

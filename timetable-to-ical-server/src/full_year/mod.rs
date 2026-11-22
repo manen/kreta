@@ -33,6 +33,7 @@ pub async fn full_year_assemble_ical(
 		&mut cache_db,
 		fresh_from,
 		fresh_to,
+		credentials,
 		&client,
 		opts,
 		fresh_update_if_older,

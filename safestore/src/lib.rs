@@ -134,3 +134,14 @@ impl<T: DatabaseEntryCompatible> Db<T> {
 		Ok(())
 	}
 }
+
+impl<T: DatabaseEntryCompatible> Db<T> {
+	pub fn with<R>(&self, f: impl FnOnce(&T) -> R) -> R {
+		f(&self.current)
+	}
+	pub async fn with_mut<R>(&mut self, f: impl AsyncFnOnce(&mut T) -> R) -> anyhow::Result<R> {
+		let f = f(&mut self.current).await;
+		self.save()?;
+		Ok(f)
+	}
+}

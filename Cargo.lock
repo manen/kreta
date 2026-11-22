@@ -3331,6 +3331,7 @@ dependencies = [
  "chrono",
  "credsign",
  "kreta-rs",
+ "safestore",
  "serde",
  "serde_json_path_to_error",
  "sha2 0.11.1",

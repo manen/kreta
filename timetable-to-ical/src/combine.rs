@@ -1,7 +1,6 @@
 use anyhow::Context;
 use calhelp::{Calendar, Event};
 use chrono::NaiveDate;
-use chrono_tz::Europe::Budapest;
 use kreta_combine::CombinedLesson;
 use kreta_rs::client::Client;
 

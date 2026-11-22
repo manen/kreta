@@ -4,11 +4,10 @@ use anyhow::Context;
 use calhelp::{Calendar, Event};
 use chrono::{Local, NaiveDate};
 use kreta_rs::client::Client;
+use serde::{Deserialize, Serialize};
 use timetable_to_ical::Options;
 
-pub struct Cache {}
-
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct CacheContent {
 	days: HashMap<NaiveDate, CacheDayData>,
 }
@@ -31,17 +30,39 @@ impl CacheContent {
 			.with_context(|| format!("while refreshing cache from {from} to {to}"))?;
 
 		let events = timetable.take_events();
-		// append last updated date to desc
-		let now = Local::now().date_naive();
+
+		let now = Local::now();
 		let last_updated_line = format!("\n\nlast updated {now}");
 
-		let events = events.map(|mut event| {
+		let events = events.filter_map(|mut event| {
+			// append last updated date to desc
 			event.description(&last_updated_line);
 
-			let day = event.dt_start(dt_start)
-			
-			event
+			let day = event.get_dt_start()?.date_naive();
+			Some((day, event))
 		});
+
+		let mut days_append_buf = HashMap::<NaiveDate, CacheDayData>::new();
+		for (date, event) in events {
+			match days_append_buf.get_mut(&date) {
+				Some(cache_day_data) => cache_day_data.events.push(event),
+				None => {
+					// create new cachedaydata
+					let cache_day_data = CacheDayData {
+						last_updated: now,
+						events: vec![event],
+					};
+					days_append_buf.insert(date, cache_day_data);
+				}
+			}
+		}
+
+		// create a new updated hashmap and put it in self.days
+		self.days = self
+			.days
+			.drain()
+			.chain(days_append_buf.into_iter())
+			.collect();
 
 		Ok(())
 	}
@@ -83,7 +104,7 @@ impl CacheContent {
 	}
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CacheDayData {
 	last_updated: chrono::DateTime<Local>,
 	events: Vec<Event>,

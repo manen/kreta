@@ -18,3 +18,4 @@ serde_json = { workspace = true }
 serde.workspace = true
 absence-analyzer = { workspace = true }
 calhelp.workspace = true
+safestore.workspace = true

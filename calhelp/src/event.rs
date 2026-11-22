@@ -1,4 +1,4 @@
-use chrono::{Date, DateTime, Local};
+use chrono::{DateTime, Local};
 use ics::properties::{Description, DtEnd, DtStart, Location, Summary};
 use serde::{Deserialize, Serialize};
 
@@ -50,10 +50,16 @@ impl Event {
 		// self.dt_start_str(dt_start.format("%Y%m%dT%H%M%S").to_string())
 		self
 	}
+	pub fn get_dt_start(&self) -> Option<&chrono::DateTime<Local>> {
+		self.dt_start.as_ref()
+	}
 	pub fn dt_end(&mut self, dt_end: chrono::DateTime<Local>) -> &mut Self {
 		// self.dt_end_str(dt_end.format("%Y%m%dT%H%M%S").to_string())
 		self.dt_end = Some(dt_end);
 		self
+	}
+	pub fn get_dt_end(&self) -> Option<&chrono::DateTime<Local>> {
+		self.dt_end.as_ref()
 	}
 
 	/// the event is all day on a single day \

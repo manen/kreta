@@ -2,11 +2,12 @@
 //!
 //! currently timetable-to-ical returns a single string so once events are added you can't add anything else \
 //! this isn't flexible so:
+//! now there's two middleground types between a concept and a calendar as a string and it's Event and Calendar and both are modifyable and mergable so it's all nice and flexible
 
 mod event;
 pub use event::*;
 
-use ics::ICalendar;
+use ics::{ICalendar, properties::Method};
 use serde::{Deserialize, Serialize};
 
 /// owns everything
@@ -20,8 +21,6 @@ impl Calendar {
 			events: iter.into_iter().collect(),
 		}
 	}
-
-	// todo method: publish
 
 	pub fn merge(self, other: Self) -> Self {
 		Calendar {
@@ -40,8 +39,9 @@ impl Calendar {
 		self.events.into_iter()
 	}
 
-	pub fn to_string(&self) -> String {
+	pub fn to_string_publish(&self) -> String {
 		let mut calendar = ICalendar::new("2.0", "timetable-to-ical");
+		calendar.push(Method::new("PUBLISH"));
 
 		for event in self.events.iter().cloned() {
 			match event.to_ics_event() {

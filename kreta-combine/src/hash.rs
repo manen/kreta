@@ -78,3 +78,5 @@ impl LessonHashByHomework {
 
 // jo beirtak az elso dogat az mukodik de az nincs is benne ebben a hashes systemben
 // az elso hazinal visszaterek
+//
+// vegul amugy most mukodik ugy nez ki szoval nem nyulok hozza

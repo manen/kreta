@@ -77,7 +77,7 @@ pub struct Db<T: DatabaseEntryCompatible> {
 impl<T: DatabaseEntryCompatible> Db<T> {
 	pub(crate) async fn from_path(path: impl AsRef<Path>) -> anyhow::Result<Self> {
 		let path = path.as_ref();
-		let file = tokio::fs::OpenOptions::new() // todo this crate should use tokio and async
+		let file = tokio::fs::OpenOptions::new()
 			.read(true)
 			.write(true)
 			.open(path)

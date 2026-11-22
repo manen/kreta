@@ -44,7 +44,7 @@ pub async fn combined_range_calendar_file(
 ) -> anyhow::Result<String> {
 	combined_range_calendar(client, from, to, opts)
 		.await
-		.map(|cal| cal.to_string())
+		.map(|cal| cal.to_string_publish())
 }
 
 pub async fn combined_range_calendar(
@@ -54,24 +54,13 @@ pub async fn combined_range_calendar(
 	opts: &Options,
 ) -> anyhow::Result<Calendar> {
 	let (combined, remaining_homework, remaining_exams) =
-		// kreta_combine::match_preprocessed_with_remainder(preprocessed)?;
 		kreta_combine::fetch_combined_with_remainder(client, from, to).await?;
 
 	let iter = map_combined(combined.iter(), opts);
 
 	// -- add remaining entries
 	let remaining_homework_iter = remaining_homework.into_iter().map(|(_, homework)| {
-		// let deadline_day = homework.date_deadline.with_timezone(&Budapest);
 		let deadline_day = homework.date_deadline;
-
-		// let mut event = Event::new(uid, deadline_day.clone());
-		// event.push(Summary::new(format!(
-		// 	"{} {}",
-		// 	opts.homework_given_prefix, homework.subject_name
-		// )));
-		// event.push(DtStart::new(deadline_day.clone()));
-		// event.push(DtEnd::new(deadline_day));
-		//
 
 		let mut event = Event::new();
 		event
@@ -94,7 +83,6 @@ pub async fn combined_range_calendar(
 			homework.text_extract(),
 			homework.teachers_name
 		);
-		// event.description(crate::escape_desc_text(&desc));
 		event.description(&desc);
 
 		anyhow::Ok(event)
@@ -109,17 +97,6 @@ pub async fn combined_range_calendar(
 			format_args!("")
 		};
 
-		// 		event.push(Summary::new(format!(
-		// 			"{} {} - {}{pretty_print}",
-		// 			opts.announced_exam_prefix, exam.subject_name, exam.topic
-		// 		)));
-		// 		event.push(DtStart::new(date_day.clone()));
-		// 		event.push(DtEnd::new(date_day.clone()));
-		// 		event.push(Location::new(exam.method.desc.clone()));
-		//
-		// 		let desc = format!("{:#?}", exam);
-		// 		event.push(Description::new(crate::escape_desc_text(&desc)));
-
 		event
 			.summary(format!(
 				"{} {} - {}{pretty_print}",
@@ -133,14 +110,7 @@ pub async fn combined_range_calendar(
 
 	let iter_with_remainder = iter
 		.chain(remaining_homework_iter)
-		.chain(remaining_exams_iter)
-		// .chain(std::iter::once({
-		// 	let mut event = Event::new();
-		// 	event.summary("fasz");
-		// 	event.dt_all_day(chrono::Local::now().date_naive());
-		// 	Ok(event)
-		// }))
-	;
+		.chain(remaining_exams_iter);
 
 	let events = iter_with_remainder.collect::<anyhow::Result<Calendar>>()?;
 	Ok(events)

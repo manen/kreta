@@ -10,9 +10,6 @@ use safestore::{Db, DbBunch, Encrypted};
 use sha2::{Digest, Sha256};
 use timetable_to_ical::Options;
 
-// all is left is to create this caches and make it a web::Data variable
-// and have the generic access it and call this function and we should all be done
-
 fn user_hash(credentials: &Credentials) -> Vec<u8> {
 	let mut hasher = Sha256::new();
 	hasher.update(credentials.username().as_bytes());

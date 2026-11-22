@@ -16,20 +16,6 @@ pub use utils_receive_opts::OptsParams;
 use chrono::{Local, NaiveDate};
 
 pub(crate) fn range_3w_3w() -> (NaiveDate, NaiveDate) {
-	// 	let (start, end) = {
-	// 		let today = Utc::now().date_naive();
-	// 		let start = today - chrono::Duration::weeks(3);
-	// 		let end = today + chrono::Duration::weeks(3);
-	// 		(start, end)
-	// 	};
-	// 	let time = NaiveTime::from_hms_opt(0, 0, 0).expect("from_hms_opt(0, 0, 0) failed");
-	//
-	// 	let start = NaiveDateTime::new(start, time);
-	// 	let end = NaiveDateTime::new(end, time);
-	//
-	// 	let start = DateTime::from_naive_utc_and_offset(start, Utc);
-	// 	let end = DateTime::from_naive_utc_and_offset(end, Utc);
-
 	let today = Local::now().date_naive();
 
 	let start = today - chrono::Duration::weeks(3);

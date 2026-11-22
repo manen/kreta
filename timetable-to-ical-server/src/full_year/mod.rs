@@ -48,5 +48,5 @@ pub async fn full_year_assemble_ical(
 		)
 	})?;
 
-	Ok(calendar.to_string())
+	Ok(calendar.to_string_publish())
 }

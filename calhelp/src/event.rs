@@ -1,5 +1,8 @@
 use chrono::{DateTime, Local};
-use ics::properties::{Description, DtEnd, DtStart, Location, Summary};
+use ics::{
+	parameters::Value,
+	properties::{Description, DtEnd, DtStart, Location, Summary},
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -121,13 +124,29 @@ impl Event {
 		let uuid = format!("{}", self.uuid);
 		let mut ics_event: ics::Event<'static> = ics::Event::new(uuid, dt_start_str.clone());
 
+		// timing
+		{
+			let mut dt_start_prop = DtStart::new(dt_start_str);
+			if self.all_day {
+				dt_start_prop.add(Value::DATE);
+			}
+			ics_event.push(dt_start_prop);
+
+			match dt_end_str {
+				Some(a) => {
+					let mut dt_end_prop = DtEnd::new(a);
+					if self.all_day {
+						dt_end_prop.add(Value::DATE);
+					}
+					ics_event.push(dt_end_prop)
+				}
+				None => {}
+			}
+		}
+
+		// details
 		match self.summary {
 			Some(a) => ics_event.push(Summary::new(a)),
-			None => {}
-		}
-		ics_event.push(DtStart::new(dt_start_str));
-		match dt_end_str {
-			Some(a) => ics_event.push(DtEnd::new(a)),
 			None => {}
 		}
 		match self.location {

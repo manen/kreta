@@ -65,22 +65,22 @@
 			<div class="row margin_v">
 				<div>
 					Az órarendlekérdezés típusa
-					<!--<p class="with_margin">
-						timetable: egyszerű, 1 hónapos intervallum (2 hét előre, 2 hét
-						hátra), néhány adatot (pl.: dolgozat témája, házifeladat szövege)
-						nem tartalmaz, de csak 1 kérelmet küld a kréta szervereknek. a
-						házifeladatot a feladás napjához mutatja
-					</p>-->
 					<p class="with_margin">
 						combine: az órarend, dolgozatok és házifeladatok összessége, 3 hét
 						előre, 3 hét hátra. több információt tartalmaz, ezzel több kérelmet
 						is küld a kréta szerverekhez(!). a házifeladatot a határidő napjához
 						mutatja
 					</p>
+					<p class="with_margin">
+						full_year: ugyanaz mint a combine, azaz minden dolgozatot, házifeladatot, hiányzást,
+						szünetet tartalmaz, de az egész tanévet lekéri.
+						A 3 hétnél régebbi vagy 3 héttel ezutáni dolgokat csak naponta hajlandó frissíteni, 3 héten belül lévő dolgokat max. 10 percenként.
+						Maradandó fileokat hoz létre a szerveren, <a href="https://github.com/manen/kreta#privacy--data-handling">see the readme for details</a>
+					</p>
 				</div>
 				<select id="timetable-type">
-					<!--<option value="timetable">egyszerű timetable</option>-->
 					<option value="combine" selected>combine</option>
+					<option value="full_year">full_year</option>
 				</select>
 			</div>
 
@@ -157,9 +157,8 @@
 					</p>
 
 					<textarea readonly class="output_url" style="width: 100%; margin-bottom: 1rem;"
-					onclick="try {t=document.createElement('textarea');t.value=this.value;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove(); alert('kimásolva'); } catch {} ">
-						http://${ical_url}
-					</textarea>
+					onclick="try {t=document.createElement('textarea');t.value=this.value.trim();document.body.appendChild(t);t.select();document.execCommand('copy');t.remove(); alert('kimásolva'); } catch {} "
+					>http://${ical_url}</textarea>
 					<br />
 
 					<a href="${absences_url}">késési statisztikák megnyitása</a>

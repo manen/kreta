@@ -1,5 +1,4 @@
 mod content;
-use std::hash::{DefaultHasher, Hash, Hasher};
 
 use absence_analyzer::retreive::last_september_first;
 use anyhow::Context;
@@ -8,15 +7,19 @@ use chrono::NaiveDate;
 pub use content::*;
 use kreta_rs::{client::Client, login::Credentials};
 use safestore::{Db, DbBunch, Encrypted};
+use sha2::{Digest, Sha256};
 use timetable_to_ical::Options;
 
 // all is left is to create this caches and make it a web::Data variable
 // and have the generic access it and call this function and we should all be done
 
-fn user_hash(credentials: &Credentials) -> u64 {
-	let mut hasher = DefaultHasher::default();
-	credentials.hash(&mut hasher);
-	hasher.finish()
+fn user_hash(credentials: &Credentials) -> Vec<u8> {
+	let mut hasher = Sha256::new();
+	hasher.update(credentials.username().as_bytes());
+	hasher.update(credentials.passwd().as_bytes());
+	hasher.update(credentials.inst_id().as_bytes());
+	let hash = hasher.finalize().as_slice().to_owned();
+	hash
 }
 
 pub struct Caches {
@@ -44,11 +47,12 @@ impl Caches {
 		credentials: &Credentials,
 	) -> anyhow::Result<Db<Encrypted<CacheContent>>> {
 		let user_hash = user_hash(&credentials);
-		let entry_id = user_hash.to_le_bytes();
-		let db =
-			self.bunch.db(&entry_id).await.with_context(|| {
-				format!("failed to open full year cache for user hash {user_hash}")
-			})?;
+		let db = self.bunch.db(&user_hash).await.with_context(|| {
+			format!(
+				"failed to open full year cache for user {} (user hash {user_hash:?})",
+				credentials.username()
+			)
+		})?;
 
 		Ok(db)
 	}

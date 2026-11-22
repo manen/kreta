@@ -20,6 +20,7 @@ pub async fn full_year_assemble_ical(
 	};
 	let client = client.lock().await;
 
+	println!("serving full year for {}", credentials.username());
 	let mut cache_db = {
 		let caches = caches.lock().await;
 		caches.db_for_user(credentials).await?

@@ -43,6 +43,7 @@ impl CacheContent {
 		});
 
 		let mut days_append_buf = HashMap::<NaiveDate, CacheDayData>::new();
+		// add all the events we have
 		for (date, event) in events {
 			match days_append_buf.get_mut(&date) {
 				Some(cache_day_data) => cache_day_data.events.push(event),
@@ -54,6 +55,21 @@ impl CacheContent {
 					};
 					days_append_buf.insert(date, cache_day_data);
 				}
+			}
+		}
+		// for the days we requested but didn't receive any events for we still have to make a CacheDayData
+		// so we know we have data for that day it's just no events
+		{
+			let mut i = from;
+			while i <= to {
+				if !days_append_buf.contains_key(&i) {
+					let cache_day_data = CacheDayData {
+						last_updated: now,
+						events: vec![],
+					};
+					days_append_buf.insert(i, cache_day_data);
+				}
+				i += chrono::Duration::days(1);
 			}
 		}
 
@@ -77,19 +93,46 @@ impl CacheContent {
 		// we're making a shortcut and only not fetching again if all the days are in cache limits
 		// so if even a day's too old we're refetching everything
 
-		let elapsed = Local::now().date_naive().signed_duration_since(to);
-		let should_fetch_fresh = elapsed > update_if_older;
+		let now = Local::now();
+
+		let mut should_fetch_fresh = false;
+		let mut i = from;
+		while i <= to && !should_fetch_fresh {
+			let day = self.days.get(&i);
+			match day {
+				Some(day) => {
+					let last_updated_elapsed = now - day.last_updated;
+					println!(
+						"last updated: {last_updated_elapsed}\nupdate if older: {update_if_older}\n"
+					);
+					if last_updated_elapsed > update_if_older {
+						should_fetch_fresh = true;
+					}
+				}
+				None => {
+					should_fetch_fresh = true;
+				}
+			}
+
+			i += chrono::Duration::days(1);
+		}
 
 		if should_fetch_fresh {
+			println!(
+				"cache is fetching from {from} to {to} since something was older than {update_if_older}"
+			);
 			self.request_days_fresh(from, to, client, opts).await
 		} else {
+			println!(
+				"cache is returning old data from {from} to {to} since nothing is older than {update_if_older}"
+			);
 			Ok(())
 		}
 	}
 
 	// delete
 	pub fn discard_if_older_than(&mut self, oldest_to_keep: NaiveDate) {
-		self.days.extract_if(|day, _| *day < oldest_to_keep);
+		self.days.extract_if(|day, _| *day < oldest_to_keep).count();
 	}
 
 	// read

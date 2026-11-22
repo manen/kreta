@@ -1,4 +1,4 @@
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash)]
 pub struct Credentials {
 	inst_id: String,
 	username: String,

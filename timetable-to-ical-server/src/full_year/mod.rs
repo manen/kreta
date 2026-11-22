@@ -1,15 +1,17 @@
 use actix_web::web;
+use anyhow::Context;
 use kreta_rs::login::Credentials;
 use timetable_to_ical::Options;
 use tokio::sync::Mutex;
 
-use crate::clients::Clients;
+use crate::{clients::Clients, full_year::cache::Caches, timetables::range_3w_3w};
 
 pub mod cache;
 
 pub async fn full_year_assemble_ical(
 	credentials: &Credentials,
 	clients: web::Data<Mutex<Clients>>,
+	caches: web::Data<Mutex<Caches>>,
 	opts: &Options,
 ) -> anyhow::Result<String> {
 	let client = {
@@ -18,18 +20,28 @@ pub async fn full_year_assemble_ical(
 	};
 	let client = client.lock().await;
 
-	// amugy konkretan a legvegen vagyok
-	// mar van store meg van minden
-	// most a dbt kell bekotni ide hogy itt betoltsuk ennek a usernek a dbjet es megnezzuk hogy van e benne cache
-	// es ha van akkor nem-e tul regi
-	//
-	// a legutobbi szeptembertol 3 hettel ezelottig cachben turkalunk
-	// 3 hettel ezelottol 3 hettel ezutanig fresh request mindig
-	// 3 hettel ezutantol julius 15eig cachben turkalunk
+	let mut cache_db = {
+		let caches = caches.lock().await;
+		caches.db_for_user(credentials).await?
+	};
 
-	// let (fresh_start, fresh_end) = crate::timetables::range_3w_3w();
-	// let fresh =
-	// 	timetable_to_ical::combine::combined_range_calendar(&client, start, end, opts).await?;
+	let (fresh_from, fresh_to) = range_3w_3w();
+	let stale_update_if_older = chrono::Duration::days(1);
+	let calendar = cache::assemble_full_year_from_db(
+		&mut cache_db,
+		fresh_from,
+		fresh_to,
+		&client,
+		opts,
+		stale_update_if_older,
+	)
+	.await
+	.with_context(|| {
+		format!(
+			"while assembling full year calendar for user {}",
+			credentials.username()
+		)
+	})?;
 
-	Ok(())
+	Ok(calendar.to_string())
 }

@@ -1,7 +1,8 @@
 use actix_web::{App, HttpServer, web};
+use anyhow::Context;
 use tokio::sync::Mutex;
 
-use crate::clients::Clients;
+use crate::{clients::Clients, full_year::cache::Caches};
 
 pub mod combine;
 
@@ -19,11 +20,17 @@ const BIND: (&str, u16) = const {
 async fn main() -> anyhow::Result<()> {
 	let signer = credsign::load_or_create(std::env::current_dir()?).await?;
 	let signer = web::Data::new(signer);
+
 	let clients = web::Data::new(Mutex::new(Clients::default()));
+	let caches = Caches::new()
+		.await
+		.with_context(|| format!("failed to create common Caches cache manager"))?;
+	let caches = web::Data::new(Mutex::new(caches));
 
 	let server = HttpServer::new(move || {
 		App::new()
 			.app_data(clients.clone())
+			.app_data(caches.clone())
 			.app_data(signer.clone())
 			.service(landing::index)
 			.service(landing::styles)

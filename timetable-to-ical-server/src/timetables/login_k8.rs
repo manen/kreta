@@ -4,7 +4,7 @@ use credsign::Signer;
 use timetable_to_ical::err::handle_timetable_err_async;
 use tokio::sync::Mutex;
 
-use crate::{clients::Clients, timetables::OptsParams};
+use crate::{clients::Clients, full_year::cache::Caches, timetables::OptsParams};
 
 #[get("/k8/{k8}/combine.ical")]
 pub async fn combine_k8(
@@ -87,6 +87,7 @@ pub async fn full_year_k8(
 	k8: web::Path<String>,
 	signer: web::Data<Signer>,
 	clients: web::Data<Mutex<Clients>>,
+	caches: web::Data<Mutex<Caches>>,
 	opts: web::Query<OptsParams>,
 ) -> impl Responder {
 	let timetable = handle_timetable_err_async(async move {
@@ -97,7 +98,7 @@ pub async fn full_year_k8(
 		let opts = opts.extract_options()?;
 
 		let timetable =
-			crate::full_year::full_year_assemble_ical(&credentials, clients, &opts).await?;
+			crate::full_year::full_year_assemble_ical(&credentials, clients, caches, &opts).await?;
 		anyhow::Ok(timetable)
 	})
 	.await;

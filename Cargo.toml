@@ -2,13 +2,16 @@
 resolver = "3"
 members = [
 	"credsign",
+	"calhelp",
+	"timerange",
+
 	"kreta-combine",
 	"kreta-rs",
-	"login_test",
-	"timerange",
 	"timetable-to-ical",
-	"timetable-to-ical-server",
 	"absence-analyzer",
+ 
+	"timetable-to-ical-server",
+	"login_test", "safestore",
 ]
 
 [workspace.dependencies]
@@ -19,21 +22,27 @@ timetable-to-ical-server.path = "./timetable-to-ical-server"
 credsign.path = "./credsign"
 timerange.path = "./timerange"
 absence-analyzer.path = "./absence-analyzer"
+calhelp.path = "./calhelp"
+safestore.path = "./safestore"
 
-anyhow = "1.0.102"
-base64 = "0.22.1"
-rand = "0.10.0"
-reqwest = { version = "0.13.2", default-features = false, features = [
+anyhow = "1.0.104"
+base64 = "0.23.1"
+rand = "0.10.4"
+reqwest = { version = "0.13.5", default-features = false, features = [
 	"rustls",
 ] }
-scraper = "0.25.0"
-serde = { version = "1.0.228", features = ["derive"] }
-sha2 = "0.10.9"
-tokio = "1.49.0"
+scraper = "0.29.0"
+serde = { version = "1.0.229", features = ["derive"] }
+sha2 = "0.11.1"
+tokio = "1.54.1"
 serde_json = { package = "serde_json_path_to_error", version = "0.1.5" }
-chrono = { version = "0.4.44", default-features = false, features = [
+chrono = { version = "0.4.45", default-features = false, features = [
 	"std",
 	"clock",
+	"serde",
 ] }
 chrono-tz = "0.10.4"
-futures = { version = "0.3.32", default-features = false, features = ["std"] }
+futures = { version = "0.3.34", default-features = false, features = ["std"] }
+ics = "0.5.8"
+uuid = { version = "1.29.3", features = ["v4", "serde"] }
+age = "0.12.1"

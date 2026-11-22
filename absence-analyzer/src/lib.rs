@@ -9,3 +9,7 @@ pub use by_week::split_by_week;
 pub use forecast::extract_unexcused_forecast;
 pub use html_stats::html_stats;
 pub use retreive::fetch_absences;
+
+// ---
+
+pub use kreta_rs::types::AbsenceRaw;

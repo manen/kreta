@@ -1,7 +1,7 @@
 #![allow(unused)]
 
 use anyhow::Context;
-use chrono::{TimeZone, Utc};
+use chrono::{Local, TimeZone};
 use chrono_tz::Europe::Budapest;
 use kreta_rs::{client::Client, login::LoginFlow};
 
@@ -34,15 +34,12 @@ async fn fucking_query_limits() -> anyhow::Result<()> {
 
 	let timetable_included = timetable
 		.iter()
-		.filter(|a| a.start_time.contains(to))
+		.filter(|a| a.start_time.format("%Y-%m-%d").to_string() == to)
 		.count();
 	let homework_included = homework
 		.iter()
 		.filter(|a| {
-			let date: chrono::DateTime<Utc> = a.date_deadline.parse().expect("fuck parsing dates");
-			let date = date.with_timezone(&Budapest);
-
-			let date = date.format("%Y-%m-%d").to_string();
+			let date = a.date_deadline.format("%Y-%m-%d").to_string();
 
 			date == to
 		})
@@ -50,17 +47,20 @@ async fn fucking_query_limits() -> anyhow::Result<()> {
 	let exams_included = exams
 		.iter()
 		.filter(|a| {
-			let date: chrono::DateTime<Utc> = a.date.parse().expect("fuck parsing dates");
-			let date = date.with_timezone(&Budapest);
-
-			let date = date.format("%Y-%m-%d").to_string();
+			let date = a.date.format("%Y-%m-%d").to_string();
 
 			date == to
 		})
 		.count();
 	let absences_included = absences
 		.iter()
-		.filter(|a| a.lesson.start_time.contains(to))
+		.filter(|a| {
+			a.lesson
+				.start_time
+				.format("%Y-%m-%d")
+				.to_string()
+				.contains(to)
+		})
 		.count();
 
 	dbg!(
@@ -113,16 +113,18 @@ async fn absences_analyze() -> anyhow::Result<()> {
 	// let data = absence_analyzer::absences_by_excuse_type(absences.iter());
 	// println!("{data:#?}");
 
-	let html = absence_analyzer::html_stats::html_stats(&absences, Utc::now());
+	let html = absence_analyzer::html_stats::html_stats(&absences, Local::now());
 	tokio::fs::write("./absences.html", &html).await?;
 
 	Ok(())
 }
 
 #[allow(deprecated)]
-fn parse_simple_date(simple: &str) -> anyhow::Result<chrono::DateTime<chrono::Utc>> {
+fn parse_simple_date(simple: &str) -> anyhow::Result<chrono::DateTime<chrono::Local>> {
 	let date = chrono::NaiveDate::parse_from_str(simple, "%Y-%m-%d")?;
-	let datetime = chrono::Utc.from_utc_date(&date).and_hms(0, 0, 0);
+	let datetime = chrono::Local
+		.from_local_datetime(&date.and_hms(0, 0, 0))
+		.unwrap();
 
 	Ok(datetime)
 }
@@ -133,7 +135,10 @@ async fn absences() -> anyhow::Result<()> {
 	let mut client = Client::full_login(&credentials).await?;
 
 	let (from, to) = ("2025-12-13", "2026-02-03");
-	let (from, to) = (parse_simple_date(from)?, parse_simple_date(to)?);
+	let (from, to) = (
+		parse_simple_date(from)?.date_naive(),
+		parse_simple_date(to)?.date_naive(),
+	);
 
 	let absences = client.absences_range(from, to).await?;
 	println!("{absences:#?}");
@@ -180,19 +185,19 @@ async fn execute_login_flow() -> anyhow::Result<()> {
 	Ok(())
 }
 
-async fn gen_timetable() -> anyhow::Result<()> {
-	let credentials = creds_from_file::read_from_file("./credentials.txt").await?;
-	let client = Client::full_login(&credentials).await?;
-
-	let opts = timetable_to_ical::Options {
-		..Default::default()
-	};
-
-	let timetable = client.timetable("2025-10-21", "2025-11-04").await?;
-	let calendar = timetable_to_ical::lessons_to_calendar_file(&timetable, &opts);
-
-	tokio::fs::write("./timetable.ical", &calendar).await?;
-
-	println!("all done");
-	Ok(())
-}
+// async fn gen_timetable() -> anyhow::Result<()> {
+// 	let credentials = creds_from_file::read_from_file("./credentials.txt").await?;
+// 	let client = Client::full_login(&credentials).await?;
+//
+// 	let opts = timetable_to_ical::Options {
+// 		..Default::default()
+// 	};
+//
+// 	let timetable = client.timetable("2025-10-21", "2025-11-04").await?;
+// 	let calendar = timetable_to_ical::lessons_to_calendar_file(&timetable, &opts);
+//
+// 	tokio::fs::write("./timetable.ical", &calendar).await?;
+//
+// 	println!("all done");
+// 	Ok(())
+// }

@@ -1,26 +1,28 @@
+use crate::AbsenceRaw;
 use anyhow::Context;
-use chrono::{DateTime, Datelike, TimeZone, Utc};
-use kreta_rs::client::{Client, absences::AbsenceRaw};
+use chrono::{DateTime, Datelike, Local, NaiveDate};
+use kreta_rs::client::Client;
 
-pub fn last_september_first() -> DateTime<Utc> {
-	let now = Utc::now();
+pub fn last_september_first() -> NaiveDate {
+	let now = Local::now();
 	last_september_first_expl(now)
 }
-pub fn last_september_first_expl(now: DateTime<Utc>) -> DateTime<Utc> {
+pub fn last_september_first_expl(now: DateTime<Local>) -> NaiveDate {
 	let year = if now.month() > 9 || (now.month() == 9 && now.day() >= 1) {
 		now.year()
 	} else {
 		now.year() - 1
 	};
 
-	Utc.with_ymd_and_hms(year, 9, 1, 0, 0, 0).unwrap()
+	NaiveDate::from_ymd_opt(year, 9, 1)
+		.unwrap_or_else(|| panic!("last september 1st doesn't exist (ymd {}, 9, 1)", year))
 }
 
 pub async fn fetch_absences(client: &Client) -> anyhow::Result<Vec<AbsenceRaw>> {
 	let from = last_september_first();
 
 	let absences = client
-		.absences_range(from, Utc::now())
+		.absences_range(from, Local::now().date_naive())
 		.await
 		.with_context(|| format!("failed to query all absences since {}", from))?;
 

@@ -1,20 +1,14 @@
 use std::borrow::Cow;
 
-use anyhow::Context;
-use chrono::{DateTime, Utc};
+use calhelp::Event;
+use chrono::{DateTime, Local};
 use chrono_tz::Europe::Budapest;
-use ics::{
-	Event, ICalendar,
-	properties::{Description, DtEnd, DtStart, Location, Summary},
-};
-use kreta_rs::client::{
-	absences::AbsenceRaw, exam::ExamRaw, homework::HomeworkRaw, timetable::LessonRaw,
-};
+
+use kreta_rs::types::{AbsenceRaw, ExamRaw, HomeworkRaw, LessonRaw};
 
 pub mod absence_best_guess;
 use absence_best_guess::absence_guess;
 
-#[cfg(feature = "combine")]
 pub mod combine;
 
 pub mod err;
@@ -71,47 +65,12 @@ pub struct ExtraData<'a> {
 	absence: Option<&'a AbsenceRaw>,
 }
 
-const FORMAT_DATE: &str = "%Y%m%d";
-const FORMAT_DATETIME: &str = "%Y%m%dT%H%M%SZ";
-
 /// avoid throwing errors if possible
-pub fn lesson_to_event_explicit<'a>(
-	lesson: &'a LessonRaw,
+pub fn lesson_to_event_explicit(
+	lesson: &LessonRaw,
 	opts: &Options,
-	extra_data: ExtraData<'a>,
-) -> anyhow::Result<Event<'a>> {
-	let uid = uuid::Uuid::new_v4();
-	let uid = format!("{uid}");
-
-	let (dtstamp, start_escaped, end_escaped) = {
-		let start: DateTime<Utc> = lesson
-			.start_time
-			.parse()
-			.with_context(|| format!("while parsing {} as a datetime", lesson.start_time))?;
-		let end: DateTime<Utc> = lesson
-			.end_time
-			.parse()
-			.with_context(|| format!("while parsing {} as a datetime", lesson.end_time))?;
-		// let (start, end) = (start.with_timezone(&Budapest), end.with_timezone(&Budapest));
-
-		if start == end {
-			// if start_time == end_time => make it an all day event (so far only seems to be school holidays n shit)
-			let start = start.with_timezone(&Budapest);
-			let event_time = start.format(FORMAT_DATE).to_string();
-			(
-				start.format("%Y%m%dT000000Z").to_string(),
-				event_time.clone(),
-				event_time,
-			)
-		} else {
-			let dtstamp = start.format("%Y%m%dT000000Z").to_string();
-			let start = start.format(FORMAT_DATETIME).to_string();
-			let end = end.format(FORMAT_DATETIME).to_string();
-
-			(dtstamp, start, end)
-		}
-	};
-
+	extra_data: ExtraData,
+) -> anyhow::Result<Event> {
 	let name = {
 		let name_base: Cow<str> = if opts.lowercase_subject_names {
 			lesson.name.to_lowercase().into()
@@ -202,11 +161,15 @@ pub fn lesson_to_event_explicit<'a>(
 		}
 	};
 
-	let mut event = Event::new(uid, dtstamp);
-	event.push(Summary::new(name));
-	event.push(DtStart::new(start_escaped));
-	event.push(DtEnd::new(end_escaped));
-	event.push(Location::new(location));
+	let mut event = Event::new();
+	event.summary(name);
+	if lesson.start_time == lesson.end_time {
+		event.dt_all_day(lesson.start_time);
+	} else {
+		event.dt_start(lesson.start_time);
+		event.dt_end(lesson.end_time);
+	}
+	event.location(location);
 
 	let pretty_print = if opts.pretty_print_as_desc {
 		let desc = format!("{lesson:#?}\n\n{extra_data:#?}");
@@ -243,13 +206,7 @@ pub fn lesson_to_event_explicit<'a>(
 	}
 	match extra_data.homework {
 		Some(homework) => {
-			let date_assigned: DateTime<Utc> =
-				homework.date_assigned.parse().with_context(|| {
-					format!(
-						"while parsing homework.date_assigned as DateTime: {}",
-						homework.date_assigned
-					)
-				})?;
+			let date_assigned: DateTime<Local> = homework.date_assigned;
 			let date_assigned = date_assigned.with_timezone(&Budapest);
 			let date_assigned = date_assigned.format("%Y %B %d");
 			info += &format!(
@@ -269,50 +226,14 @@ pub fn lesson_to_event_explicit<'a>(
 		(None, _) => Some(info),
 	};
 	if let Some(desc) = desc {
-		let desc = escape_desc_text(&desc);
-		event.push(Description::new(desc));
+		// let desc = escape_desc_text(&desc);
+		// event.push(Description::new(desc));
+		event.description(desc);
 	}
 
 	Ok(event)
 }
 
-pub fn lesson_to_event<'a>(lesson: &'a LessonRaw, opts: &Options) -> anyhow::Result<Event<'a>> {
+pub fn lesson_to_event(lesson: &LessonRaw, opts: &Options) -> anyhow::Result<Event> {
 	lesson_to_event_explicit(lesson, opts, Default::default())
-}
-
-pub fn lessons_to_calendar_file_res<'a, I: IntoIterator<Item = &'a LessonRaw>>(
-	iter: I,
-	opts: &Options,
-) -> anyhow::Result<String> {
-	let mut calendar = ICalendar::new("2.0", "timetable-to-ical");
-
-	let events_iter = iter
-		.into_iter()
-		.map(|lesson| (lesson, lesson_to_event(lesson, opts)));
-	for (lesson, event) in events_iter {
-		let event = event.with_context(|| {
-			format!("calling lesson_to_event returned an error\nlesson:\n{lesson:#?}")
-		})?;
-
-		calendar.add_event(event);
-	}
-
-	Ok(calendar.to_string())
-}
-/// errors get turned into a timetable
-pub fn lessons_to_calendar_file<'a, I: IntoIterator<Item = &'a LessonRaw>>(
-	iter: I,
-	opts: &Options,
-) -> String {
-	err::result_as_timetable(lessons_to_calendar_file_res(iter, opts))
-}
-
-// -- utils
-
-fn escape_desc_text(input: &str) -> String {
-	input
-		.replace('\\', "\\\\")
-		.replace(';', "\\;")
-		.replace(',', "\\,")
-		.replace('\n', "\\n")
 }

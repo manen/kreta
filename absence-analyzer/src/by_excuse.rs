@@ -1,7 +1,7 @@
 use std::{collections::HashMap, fmt::Display, hash::Hash};
 
+use crate::AbsenceRaw;
 use anyhow::anyhow;
-use kreta_rs::client::absences::AbsenceRaw;
 
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Default)]
 pub struct AbsenceDetails {
@@ -47,7 +47,7 @@ pub struct AbsencesByExcuse {
 	pub absences: HashMap<ExcuseType, AbsenceDetails>,
 }
 
-fn push_to_absence_buf<K: Hash + Eq>(
+pub(crate) fn push_to_absence_buf<K: Hash + Eq>(
 	buf: &mut HashMap<K, AbsenceDetails>,
 	typ: K,
 	minutes: Option<i32>,

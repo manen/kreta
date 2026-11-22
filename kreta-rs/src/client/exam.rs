@@ -1,5 +1,11 @@
 use anyhow::{Context, anyhow};
-use serde::{Deserialize, Serialize};
+#[cfg(feature = "timerange")]
+#[cfg(feature = "client")]
+use chrono::NaiveDate;
+
+#[cfg(feature = "timerange")]
+#[cfg(feature = "client")]
+use crate::types::ExamRaw;
 
 #[cfg(feature = "client")]
 use super::Client;
@@ -44,8 +50,8 @@ impl Client {
 	/// so no need for this function to be async
 	pub fn exams_range_stream(
 		&self,
-		from: chrono::DateTime<chrono::Utc>,
-		to: chrono::DateTime<chrono::Utc>,
+		from: NaiveDate,
+		to: NaiveDate,
 	) -> impl futures::Stream<Item = anyhow::Result<Vec<ExamRaw>>> {
 		use futures::stream::FuturesUnordered;
 
@@ -71,8 +77,8 @@ impl Client {
 	/// exams query with no maximum distance between from & to
 	pub async fn exams_range(
 		&self,
-		from: chrono::DateTime<chrono::Utc>,
-		to: chrono::DateTime<chrono::Utc>,
+		from: NaiveDate,
+		to: NaiveDate,
 	) -> anyhow::Result<Vec<ExamRaw>> {
 		use futures::StreamExt;
 
@@ -87,35 +93,3 @@ impl Client {
 		Ok(buf)
 	}
 }
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct ExamRaw {
-	#[serde(rename = "Uid")]
-	pub uid: String,
-	#[serde(rename = "Datum")]
-	pub date: String,
-
-	#[serde(rename = "BejelentesDatuma")]
-	pub date_announced: String,
-	#[serde(rename = "RogzitoTanarNeve")]
-	pub teachers_name: String,
-
-	#[serde(rename = "OrarendiOraOraszama")]
-	/// for the given day (hanyadik ora aznap)
-	pub lesson_index_in_timetable: i32,
-	#[serde(rename = "Tantargy")]
-	pub subject: SubjectRaw,
-	#[serde(rename = "TantargyNeve")]
-	pub subject_name: String,
-
-	#[serde(rename = "Temaja")]
-	pub topic: String,
-	#[serde(rename = "Modja")]
-	pub method: UidNameAndDescRaw,
-
-	#[serde(rename = "OsztalyCsoport")]
-	pub class_group: ClassGroupRaw,
-}
-
-pub use crate::client::homework::ClassGroupRaw;
-pub use crate::client::timetable::{SubjectRaw, UidNameAndDescRaw};

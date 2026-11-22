@@ -1,6 +1,5 @@
+use crate::AbsenceRaw;
 use std::collections::HashSet;
-
-use kreta_rs::client::absences::AbsenceRaw;
 
 use crate::{
 	by_week::{AbsencesByWeekAndExcuse, WeekNum, split_by_week_and_excuse},
@@ -10,7 +9,7 @@ use crate::{
 /// get from crate::by_week::split_by_week_and_excuse
 pub fn line_by_week(
 	data: &AbsencesByWeekAndExcuse,
-	today: chrono::DateTime<chrono::Utc>,
+	today: chrono::DateTime<chrono::Local>,
 ) -> String {
 	let all_excuse_types = data
 		.iter()
@@ -128,7 +127,7 @@ pub fn line_by_week(
 /// -- html
 pub fn line_graph(
 	absences_raw: impl Iterator<Item = AbsenceRaw>,
-	today: chrono::DateTime<chrono::Utc>,
+	today: chrono::DateTime<chrono::Local>,
 ) -> String {
 	let by_week = split_by_week_and_excuse(absences_raw);
 	let line_graph = by_week.map(|a| super::line_by_week(&a, today));

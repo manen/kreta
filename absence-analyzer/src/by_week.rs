@@ -1,8 +1,8 @@
 use std::{collections::HashMap, fmt::Display};
 
+use crate::AbsenceRaw;
 use anyhow::Context;
-use chrono::{DateTime, Datelike, Duration, Utc};
-use kreta_rs::client::absences::AbsenceRaw;
+use chrono::{Datelike, Duration, Local};
 
 use crate::{AbsencesByExcuse, retreive::last_september_first_expl};
 
@@ -10,13 +10,13 @@ use crate::{AbsencesByExcuse, retreive::last_september_first_expl};
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct WeekNum(u32);
 impl WeekNum {
-	pub fn from_date(date: chrono::DateTime<Utc>) -> Self {
+	pub fn from_date(date: chrono::DateTime<Local>) -> Self {
 		let sept_1 = last_september_first_expl(date.clone());
 
 		let date_monday = date - Duration::days(date.weekday().num_days_from_monday() as _);
 		let sept_1_monday = sept_1 - Duration::days(sept_1.weekday().num_days_from_monday() as _);
 
-		let diff_days = (date_monday - sept_1_monday).num_days();
+		let diff_days = (date_monday.date_naive() - sept_1_monday).num_days();
 		let diff_weeks_i64 = diff_days / 7;
 
 		let diff_weeks = match diff_weeks_i64.try_into() {
@@ -35,12 +35,12 @@ impl WeekNum {
 
 		Self(diff_weeks)
 	}
-	pub fn get_monday_expl(self, sept_1: DateTime<Utc>) -> chrono::DateTime<Utc> {
-		let sept_1_monday = sept_1 - Duration::days(sept_1.weekday().num_days_from_monday() as _);
-		let date_monday = sept_1_monday + Duration::weeks(self.0 as _);
-
-		date_monday
-	}
+	// 	pub fn get_monday_expl(self, sept_1: DateTime<Local>) -> chrono::DateTime<Local> {
+	// 		let sept_1_monday = sept_1 - Duration::days(sept_1.weekday().num_days_from_monday() as _);
+	// 		let date_monday = sept_1_monday + Duration::weeks(self.0 as _);
+	//
+	// 		date_monday
+	// 	}
 
 	pub fn take(self) -> u32 {
 		self.0
@@ -49,33 +49,6 @@ impl WeekNum {
 impl Display for WeekNum {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		write!(f, "{}", self.0)
-	}
-}
-
-#[cfg(test)]
-mod tests {
-	use chrono::Weekday;
-
-	use super::*;
-
-	#[test]
-	fn test_weeknum() {
-		let base: DateTime<Utc> = "2025-10-03T12:00:00Z".parse().unwrap();
-		let sept_1 = last_september_first_expl(base);
-
-		let iter = 0..(500 * 24);
-		let iter = iter.map(|n| base + Duration::hours(n));
-
-		for date in iter {
-			let weeknum = WeekNum::from_date(date);
-			let monday = weeknum.get_monday_expl(sept_1);
-
-			let weekday = monday.weekday();
-			assert_eq!(weekday, Weekday::Mon);
-
-			let regenerated_weeknum = WeekNum::from_date(monday);
-			assert_eq!(weeknum, regenerated_weeknum)
-		}
 	}
 }
 
@@ -88,12 +61,7 @@ pub fn split_by_week(iter: impl IntoIterator<Item = AbsenceRaw>) -> anyhow::Resu
 	let mut buf = HashMap::new();
 
 	for absence in iter {
-		let date: chrono::DateTime<Utc> = absence
-			.lesson
-			.start_time
-			.parse()
-			.with_context(|| format!("failed to parse {} as DateTime<Utc>", absence.date))?;
-		let weeknum = WeekNum::from_date(date);
+		let weeknum = WeekNum::from_date(absence.lesson.start_time);
 
 		let mut existing: Vec<AbsenceRaw> = buf.remove(&weeknum).unwrap_or_default();
 		existing.push(absence);

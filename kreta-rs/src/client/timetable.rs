@@ -1,5 +1,11 @@
 use anyhow::{Context, anyhow};
-use serde::{Deserialize, Serialize};
+#[cfg(feature = "timerange")]
+#[cfg(feature = "client")]
+use chrono::NaiveDate;
+
+#[cfg(feature = "timerange")]
+#[cfg(feature = "client")]
+use crate::types::LessonRaw;
 
 #[cfg(feature = "client")]
 use super::Client;
@@ -10,6 +16,8 @@ impl Client {
 	/// from & to are both expected to be in the format of yyyy-mm-dd \
 	/// maximum distance between from & to is one month
 	pub async fn timetable(&self, from: &str, to: &str) -> anyhow::Result<Vec<LessonRaw>> {
+		use crate::types::LessonRaw;
+
 		let url = format!(
 			"https://{}.e-kreta.hu/ellenorzo/v3/sajat/OrarendElemek?datumTol={from}&datumIg={to}",
 			self.inst_id
@@ -30,8 +38,11 @@ impl Client {
 
 		let resp = resp.text().await?;
 		// println!("{resp}");
-		let resp: Vec<LessonRaw> = serde_json::from_str(&resp)
-			.with_context(|| format!("while deserializing response from {url}"))?;
+		let resp: Vec<LessonRaw> = serde_json::from_str(&resp).map_err(|err| {
+			anyhow!(
+				"{err}\n\nwhile deserializing response from {url}\n\nserver responded with:\n{resp}"
+			)
+		})?;
 
 		Ok(resp)
 	}
@@ -44,8 +55,8 @@ impl Client {
 	/// so no need for this function to be async
 	pub fn timetable_range_stream(
 		&self,
-		from: chrono::DateTime<chrono::Utc>,
-		to: chrono::DateTime<chrono::Utc>,
+		from: NaiveDate,
+		to: NaiveDate,
 	) -> impl futures::Stream<Item = anyhow::Result<Vec<LessonRaw>>> {
 		use futures::stream::FuturesUnordered;
 
@@ -71,8 +82,8 @@ impl Client {
 	/// timetable query with no maximum distance between from & to
 	pub async fn timetable_range(
 		&self,
-		from: chrono::DateTime<chrono::Utc>,
-		to: chrono::DateTime<chrono::Utc>,
+		from: NaiveDate,
+		to: NaiveDate,
 	) -> anyhow::Result<Vec<LessonRaw>> {
 		use futures::StreamExt;
 
@@ -86,84 +97,4 @@ impl Client {
 
 		Ok(buf)
 	}
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-/// represents a lesson returned by https://[instituteCode].e-kreta.hu/ellenorzo/v3/sajat/OrarendElem
-pub struct LessonRaw {
-	#[serde(rename = "Uid")]
-	pub uid: String,
-	#[serde(rename = "Datum")]
-	pub date: String,
-	#[serde(rename = "KezdetIdopont")]
-	pub start_time: String,
-	#[serde(rename = "VegIdopont")]
-	pub end_time: String,
-	#[serde(rename = "Nev")]
-	pub name: String,
-
-	#[serde(rename = "Oraszam")]
-	pub oraszam: Option<i32>,
-	#[serde(rename = "OraEvesSorszama")]
-	pub ora_eves_sorszama: Option<i32>,
-
-	#[serde(rename = "OsztalyCsoport")]
-	pub class_group: Option<ClassGroupRaw>,
-	#[serde(rename = "TanarNeve")]
-	pub teachers_name: Option<String>,
-	#[serde(rename = "Tantargy")]
-	pub subject: Option<SubjectRaw>,
-	#[serde(rename = "Tema")]
-	pub topic: Option<String>,
-	#[serde(rename = "TeremNeve")]
-	pub room_name: Option<String>,
-
-	#[serde(rename = "Tipus")]
-	pub lesson_type: UidNameAndDescRaw,
-	#[serde(rename = "TanuloJelenlet")]
-	pub student_presence: Option<UidNameAndDescRaw>,
-	#[serde(rename = "Allapot")]
-	pub status: UidNameAndDescRaw,
-
-	#[serde(rename = "HelyettesTanarNeve")]
-	pub substitute_teacher_name: Option<String>,
-	#[serde(rename = "HaziFeladatUid")]
-	pub homework_uid: Option<String>,
-	#[serde(rename = "BejelentettSzamonkeresUid")]
-	pub announced_exam_uid: Option<String>,
-
-	#[serde(rename = "Letrehozas")]
-	pub created_at: String,
-	#[serde(rename = "UtolsoModositas")]
-	pub last_modified: String,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct ClassGroupRaw {
-	#[serde(rename = "Uid")]
-	pub uid: String,
-	#[serde(rename = "Nev")]
-	pub name: String,
-}
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct SubjectRaw {
-	#[serde(rename = "Uid")]
-	pub uid: String,
-	#[serde(rename = "Nev")]
-	pub name: String,
-	#[serde(rename = "Kategoria")]
-	pub category: UidNameAndDescRaw,
-	#[serde(rename = "SortIndex")]
-	pub sort_index: i32,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-/// seems to be a reused data structure in the timetable responses
-pub struct UidNameAndDescRaw {
-	#[serde(rename = "Uid")]
-	pub uid: String,
-	#[serde(rename = "Nev")]
-	pub name: String,
-	#[serde(rename = "Leiras")]
-	pub desc: String,
 }

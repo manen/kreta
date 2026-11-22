@@ -4,7 +4,7 @@ use credsign::Signer;
 use timetable_to_ical::err::handle_timetable_err_async;
 use tokio::sync::Mutex;
 
-use crate::{clients::Clients, timetables::OptsParams};
+use crate::{clients::Clients, full_year::cache::Caches, timetables::OptsParams};
 
 #[get("/k8/{k8}/combine.ical")]
 pub async fn combine_k8(
@@ -30,8 +30,8 @@ pub async fn combine_k8(
 		.body(timetable)
 }
 
-#[get("/k8/{k8}/timetable.ical")]
-pub async fn timetable_k8(
+#[get("/k8/{k8}/archive.ical")]
+pub async fn archive_ical_k8(
 	k8: web::Path<String>,
 	signer: web::Data<Signer>,
 	clients: web::Data<Mutex<Clients>>,
@@ -44,7 +44,7 @@ pub async fn timetable_k8(
 
 		let opts = opts.extract_options()?;
 
-		let timetable = super::generic_timetable(&credentials, clients, &opts).await?;
+		let timetable = super::generic_archive_ical(&credentials, clients, &opts).await?;
 		anyhow::Ok(timetable)
 	})
 	.await;
@@ -66,7 +66,7 @@ pub async fn absences_k8(
 			.with_context(|| format!("failed to decode k8 {k8}"))?;
 
 		let html =
-			super::generic_absences(&credentials, clients.clone(), chrono::Utc::now()).await?;
+			super::generic_absences(&credentials, clients.clone(), chrono::Local::now()).await?;
 		anyhow::Ok(html)
 	};
 	let f = f().await;
@@ -80,4 +80,30 @@ pub async fn absences_k8(
 			Either::Right(resp)
 		}
 	}
+}
+
+#[get("/k8/{k8}/full_year.ical")]
+pub async fn full_year_k8(
+	k8: web::Path<String>,
+	signer: web::Data<Signer>,
+	clients: web::Data<Mutex<Clients>>,
+	caches: web::Data<Mutex<Caches>>,
+	opts: web::Query<OptsParams>,
+) -> impl Responder {
+	let timetable = handle_timetable_err_async(async move {
+		let k8 = k8.into_inner();
+		let credentials = crate::k8::decode_k8(&k8, &signer)
+			.with_context(|| format!("failed to decode k8 {k8}"))?;
+
+		let opts = opts.extract_options()?;
+
+		let timetable =
+			crate::full_year::full_year_assemble_ical(&credentials, clients, caches, &opts).await?;
+		anyhow::Ok(timetable)
+	})
+	.await;
+
+	HttpResponse::Ok()
+		.content_type("text/calendar")
+		.body(timetable)
 }

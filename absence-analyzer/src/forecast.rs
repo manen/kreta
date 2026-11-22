@@ -1,4 +1,4 @@
-use chrono::Utc;
+use chrono::Local;
 
 use crate::{AbsencesByExcuse, ExcuseType};
 
@@ -6,9 +6,9 @@ const SCHOOL_YEAR_MONTHS: f32 = 9.5;
 
 pub fn months_since_september_first() -> f32 {
 	let september_first = crate::retreive::last_september_first();
-	let now = Utc::now();
+	let today = Local::now().date_naive();
 
-	let distance = now - september_first;
+	let distance = today - september_first;
 	let days = distance.num_days() as f32;
 	let months = days / 30.436875;
 

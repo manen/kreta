@@ -1,11 +1,9 @@
 #[cfg(feature = "timerange")]
 #[cfg(feature = "client")]
-use chrono::Utc;
-use serde::{Deserialize, Serialize};
+use chrono::NaiveDate;
 
 #[cfg(feature = "client")]
-use crate::client::Client;
-use crate::client::exam::{ClassGroupRaw, SubjectRaw, UidNameAndDescRaw};
+use crate::{client::Client, types::AbsenceRaw};
 
 #[cfg(feature = "client")]
 impl Client {
@@ -52,8 +50,8 @@ impl Client {
 	/// needs to be polled to start doing anything
 	pub fn absences_range_stream(
 		&self,
-		from: chrono::DateTime<Utc>,
-		to: chrono::DateTime<Utc>,
+		from: NaiveDate,
+		to: NaiveDate,
 	) -> impl futures::Stream<Item = anyhow::Result<Vec<AbsenceRaw>>> {
 		use futures::stream::FuturesUnordered;
 
@@ -79,8 +77,8 @@ impl Client {
 	/// absence query with no maximum distance between from & to
 	pub async fn absences_range(
 		&self,
-		from: chrono::DateTime<Utc>,
-		to: chrono::DateTime<Utc>,
+		from: NaiveDate,
+		to: NaiveDate,
 	) -> anyhow::Result<Vec<AbsenceRaw>> {
 		use futures::StreamExt as _;
 
@@ -96,55 +94,4 @@ impl Client {
 		}
 		Ok(buf)
 	}
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct AbsenceRaw {
-	#[serde(rename = "KeszitesDatuma")]
-	pub date_of_creation: String,
-	#[serde(rename = "Datum")]
-	pub date: String,
-	#[serde(rename = "KesesPercben")]
-	pub late_by_minutes: Option<i32>,
-	#[serde(rename = "OsztalyCsoport")]
-	pub class_group: ClassGroupRaw,
-
-	#[serde(rename = "IgazolasAllapota")]
-	pub excuse_status: String,
-	#[serde(rename = "IgazolasTipusa")]
-	pub excuse_type: Option<UidNameAndDescRaw>,
-
-	#[serde(rename = "Ora")]
-	pub lesson: LessonRaw,
-
-	#[serde(rename = "Mod")]
-	pub mode: UidNameAndDescRaw,
-	#[serde(rename = "Tantargy")]
-	pub subject: SubjectRaw,
-
-	#[serde(rename = "RogzitoTanarNeve")]
-	pub teachers_name: String,
-	#[serde(rename = "Tipus")]
-	pub typ: UidNameAndDescRaw,
-
-	#[serde(rename = "Uid")]
-	pub uid: String,
-}
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct LessonRaw {
-	#[serde(rename = "KezdoDatum")]
-	pub start_time: String,
-	#[serde(rename = "VegDatum")]
-	pub end_time: String,
-	#[serde(rename = "Oraszam")]
-	pub oraszam: i32,
-}
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct TypeRaw {
-	#[serde(rename = "Nev")]
-	pub name: String,
-	#[serde(rename = "Kategoria")]
-	pub category: UidNameAndDescRaw,
-	#[serde(rename = "Uid")]
-	pub uid: String,
 }

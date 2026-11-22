@@ -1,17 +1,17 @@
-use chrono::{DateTime, TimeZone};
+use chrono::NaiveDate;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 /// iterator that splits up time into pieces with a maximum size and optional distance in between
-pub struct Timesplit<Tz: TimeZone> {
-	i: chrono::DateTime<Tz>,
-	end: chrono::DateTime<Tz>,
+pub struct Timesplit {
+	i: NaiveDate,
+	end: NaiveDate,
 
 	max_dur: chrono::Duration,
 	/// the amount of time between a `to` output and the next `from` output
 	gap: chrono::Duration,
 }
-impl<Tz: TimeZone> Iterator for Timesplit<Tz> {
-	type Item = (chrono::DateTime<Tz>, chrono::DateTime<Tz>);
+impl Iterator for Timesplit {
+	type Item = (NaiveDate, NaiveDate);
 
 	fn size_hint(&self) -> (usize, Option<usize>) {
 		let remaining = self.end.clone() - self.i.clone();
@@ -35,109 +35,25 @@ impl<Tz: TimeZone> Iterator for Timesplit<Tz> {
 
 /// creates a new range of times \
 /// usage from here is similar to std::ops::Range, just an iterator
-pub fn range<Tz: TimeZone>(
-	from: DateTime<Tz>,
-	to: DateTime<Tz>,
+pub fn range(
+	from: NaiveDate,
+	to: NaiveDate,
 	max_duration: chrono::Duration,
 	gap: chrono::Duration,
-) -> Timesplit<Tz> {
+) -> Timesplit {
+	let dur = if max_duration < chrono::Duration::days(1) {
+		chrono::Duration::days(1)
+	} else {
+		max_duration
+	};
+
 	Timesplit {
 		i: from,
 		end: to,
-		max_dur: max_duration,
+		max_dur: dur,
 		gap,
 	}
 }
 
 // i'll get back to it whenever
 // combine is proven to work tho which is cool
-
-#[cfg(test)]
-mod tests {
-	use std::str::FromStr;
-
-	use chrono::{DateTime, Utc};
-
-	use super::*;
-
-	#[test]
-	fn test_name() {
-		let i = dateparser::parse_with_timezone("2025-10-01 00:00:00", &Utc).unwrap();
-		// println!("start: {i:?}");
-		let end = dateparser::parse_with_timezone("2025-10-08 00:01:00", &Utc).unwrap();
-		let max_dur = chrono::Duration::hours(12);
-
-		let timesplit = Timesplit {
-			i,
-			end,
-			max_dur,
-			gap: chrono::Duration::zero(),
-		};
-
-		let timesplit = timesplit.collect::<Vec<_>>();
-
-		let expected = vec![
-			(
-				DateTime::<Utc>::from_str("2025-10-01T00:00:00Z").unwrap(),
-				DateTime::<Utc>::from_str("2025-10-01T12:00:00Z").unwrap(),
-			),
-			(
-				DateTime::<Utc>::from_str("2025-10-01T12:00:00Z").unwrap(),
-				DateTime::<Utc>::from_str("2025-10-02T00:00:00Z").unwrap(),
-			),
-			(
-				DateTime::<Utc>::from_str("2025-10-02T00:00:00Z").unwrap(),
-				DateTime::<Utc>::from_str("2025-10-02T12:00:00Z").unwrap(),
-			),
-			(
-				DateTime::<Utc>::from_str("2025-10-02T12:00:00Z").unwrap(),
-				DateTime::<Utc>::from_str("2025-10-03T00:00:00Z").unwrap(),
-			),
-			(
-				DateTime::<Utc>::from_str("2025-10-03T00:00:00Z").unwrap(),
-				DateTime::<Utc>::from_str("2025-10-03T12:00:00Z").unwrap(),
-			),
-			(
-				DateTime::<Utc>::from_str("2025-10-03T12:00:00Z").unwrap(),
-				DateTime::<Utc>::from_str("2025-10-04T00:00:00Z").unwrap(),
-			),
-			(
-				DateTime::<Utc>::from_str("2025-10-04T00:00:00Z").unwrap(),
-				DateTime::<Utc>::from_str("2025-10-04T12:00:00Z").unwrap(),
-			),
-			(
-				DateTime::<Utc>::from_str("2025-10-04T12:00:00Z").unwrap(),
-				DateTime::<Utc>::from_str("2025-10-05T00:00:00Z").unwrap(),
-			),
-			(
-				DateTime::<Utc>::from_str("2025-10-05T00:00:00Z").unwrap(),
-				DateTime::<Utc>::from_str("2025-10-05T12:00:00Z").unwrap(),
-			),
-			(
-				DateTime::<Utc>::from_str("2025-10-05T12:00:00Z").unwrap(),
-				DateTime::<Utc>::from_str("2025-10-06T00:00:00Z").unwrap(),
-			),
-			(
-				DateTime::<Utc>::from_str("2025-10-06T00:00:00Z").unwrap(),
-				DateTime::<Utc>::from_str("2025-10-06T12:00:00Z").unwrap(),
-			),
-			(
-				DateTime::<Utc>::from_str("2025-10-06T12:00:00Z").unwrap(),
-				DateTime::<Utc>::from_str("2025-10-07T00:00:00Z").unwrap(),
-			),
-			(
-				DateTime::<Utc>::from_str("2025-10-07T00:00:00Z").unwrap(),
-				DateTime::<Utc>::from_str("2025-10-07T12:00:00Z").unwrap(),
-			),
-			(
-				DateTime::<Utc>::from_str("2025-10-07T12:00:00Z").unwrap(),
-				DateTime::<Utc>::from_str("2025-10-08T00:00:00Z").unwrap(),
-			),
-			(
-				DateTime::<Utc>::from_str("2025-10-08T00:00:00Z").unwrap(),
-				DateTime::<Utc>::from_str("2025-10-08T00:01:00Z").unwrap(),
-			),
-		];
-		assert_eq!(timesplit, expected);
-	}
-}

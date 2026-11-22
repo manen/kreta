@@ -4,10 +4,10 @@
 //! in the kreta project this secret is most likely the user's password (hashed together with username and whatnot) because we don't have access to it only when a request actually comes in with a k8
 
 use std::{
-	fs::File,
-	io::{ErrorKind, Seek, SeekFrom},
+	io::{Cursor, ErrorKind, SeekFrom},
 	path::{Path, PathBuf},
 };
+use tokio::io::{AsyncSeekExt, AsyncWriteExt};
 
 use anyhow::Context;
 use base64::{Engine, prelude::BASE64_URL_SAFE};
@@ -24,18 +24,25 @@ pub struct DbBunch<T: DatabaseEntryCompatible> {
 	_t: std::marker::PhantomData<T>,
 }
 impl<T: DatabaseEntryCompatible> DbBunch<T> {
-	pub fn new(dir_path: impl Into<PathBuf>) -> anyhow::Result<Self> {
+	pub async fn new(dir_path: impl Into<PathBuf>) -> anyhow::Result<Self> {
 		let path = dir_path.into();
 
-		std::fs::create_dir_all(&path)
+		tokio::fs::create_dir_all(&path)
+			.await
 			.with_context(|| format!("failed to create_dir_all db dir {}", path.display()))?;
 
-		let path = path
-			.canonicalize()
+		// let path = path
+		// 	.canonicalize()
+		let path = tokio::fs::canonicalize(&path)
+			.await
 			.with_context(|| format!("failed to canonicalize dbbunch path {}", path.display()))?;
 
-		std::fs::read_dir(&path)
-			.with_context(|| format!("failed to read db dir {}", path.display()))?;
+		tokio::fs::read_dir(&path)
+			.await
+			.with_context(|| format!("failed to read db dir {}", path.display()))?
+			.next_entry()
+			.await
+			.with_context(|| format!("failed to get first element of dir {}", path.display()))?;
 
 		Ok(Self {
 			path,
@@ -44,7 +51,7 @@ impl<T: DatabaseEntryCompatible> DbBunch<T> {
 	}
 
 	/// entry_id isn't a name but any type of binary input
-	pub fn db(&self, entry_id: &[u8]) -> anyhow::Result<Db<T>> {
+	pub async fn db(&self, entry_id: &[u8]) -> anyhow::Result<Db<T>> {
 		let b64 = BASE64_URL_SAFE.encode(&entry_id);
 
 		let file_path = self.path.join(format!("{b64}.ssdb"));
@@ -52,21 +59,22 @@ impl<T: DatabaseEntryCompatible> DbBunch<T> {
 		// 	.canonicalize()
 		// 	.with_context(|| format!("failed to canonicalize {}", file_path.display()))?;
 
-		Db::from_path(&file_path)
+		Db::from_path(&file_path).await
 	}
 }
 
 pub struct Db<T: DatabaseEntryCompatible> {
-	file: File,
+	file: tokio::fs::File,
 	current: T,
 }
 impl<T: DatabaseEntryCompatible> Db<T> {
-	pub(crate) fn from_path(path: impl AsRef<Path>) -> anyhow::Result<Self> {
+	pub(crate) async fn from_path(path: impl AsRef<Path>) -> anyhow::Result<Self> {
 		let path = path.as_ref();
-		let file = std::fs::OpenOptions::new() // todo this crate should use tokio and async
+		let file = tokio::fs::OpenOptions::new() // todo this crate should use tokio and async
 			.read(true)
 			.write(true)
-			.open(path);
+			.open(path)
+			.await;
 
 		// println!("{}", path.display());
 
@@ -74,12 +82,13 @@ impl<T: DatabaseEntryCompatible> Db<T> {
 			Ok(mut file) => {
 				// read file
 
-				let bufreader = std::io::BufReader::new(&mut file);
-				let content: T = ciborium::from_reader(bufreader).with_context(|| {
-					format!("failed to read and deserialize db at {}", path.display())
-				})?;
+				let bufreader = tokio::fs::read(path)
+					.await
+					.with_context(|| format!("failed to read db file at {}", path.display()))?;
+				let content: T = ciborium::from_reader(Cursor::new(bufreader))
+					.with_context(|| format!("failed to deserialize db at {}", path.display()))?;
 
-				file.seek(SeekFrom::Start(0)).with_context(|| {
+				file.seek(SeekFrom::Start(0)).await.with_context(|| {
 					format!(
 						"failed to seek back to start of the file after reading file for db at {}",
 						path.display()
@@ -90,11 +99,12 @@ impl<T: DatabaseEntryCompatible> Db<T> {
 			}
 			Err(err) => match err.kind() {
 				ErrorKind::NotFound => {
-					let file_created = std::fs::OpenOptions::new()
+					let file_created = tokio::fs::OpenOptions::new()
 						.read(true)
 						.write(true)
 						.create_new(true)
 						.open(path)
+						.await
 						.with_context(|| {
 							format!(
 								"the db we're trying to open doesn't exist and it couldn't be created (at {})",
@@ -122,14 +132,20 @@ impl<T: DatabaseEntryCompatible> Db<T> {
 		})
 	}
 
-	pub fn save(&mut self) -> anyhow::Result<()> {
+	pub async fn save(&mut self) -> anyhow::Result<()> {
 		self.file
 			.seek(SeekFrom::Start(0))
+			.await
 			.with_context(|| format!("failed to seek db to start"))?;
-		let bufwriter = std::io::BufWriter::new(&mut self.file);
 
-		ciborium::into_writer(&self.current, bufwriter)
-			.with_context(|| format!("failed to serialize and write db"))?;
+		let mut bufwriter = Vec::new();
+		ciborium::into_writer(&self.current, &mut bufwriter)
+			.with_context(|| format!("failed to serialize db"))?;
+
+		self.file
+			.write_all(&bufwriter)
+			.await
+			.with_context(|| "failed to write to db file")?;
 
 		Ok(())
 	}
@@ -141,7 +157,7 @@ impl<T: DatabaseEntryCompatible> Db<T> {
 	}
 	pub async fn with_mut<R>(&mut self, f: impl AsyncFnOnce(&mut T) -> R) -> anyhow::Result<R> {
 		let f = f(&mut self.current).await;
-		self.save()?;
+		self.save().await?;
 		Ok(f)
 	}
 }

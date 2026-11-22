@@ -29,7 +29,7 @@ impl Caches {
 			.with_context(|| "no current dir")?
 			.join("timetable_user_cache");
 
-		let bunch = DbBunch::new(&cache_dir_path).with_context(|| {
+		let bunch = DbBunch::new(&cache_dir_path).await.with_context(|| {
 			format!(
 				"failed to create DbBunch with dir path {}",
 				cache_dir_path.display()
@@ -42,10 +42,10 @@ impl Caches {
 	pub async fn db_for_user(&self, credentials: &Credentials) -> anyhow::Result<Db<CacheContent>> {
 		let user_hash = user_hash(&credentials);
 		let entry_id = user_hash.to_le_bytes();
-		let db = self
-			.bunch
-			.db(&entry_id)
-			.with_context(|| format!("failed to open full year cache for user hash {user_hash}"))?;
+		let db =
+			self.bunch.db(&entry_id).await.with_context(|| {
+				format!("failed to open full year cache for user hash {user_hash}")
+			})?;
 
 		Ok(db)
 	}

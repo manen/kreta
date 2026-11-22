@@ -57,6 +57,7 @@ pub async fn assemble_full_year_from_cache(
 	fresh_to: NaiveDate,
 	client: &Client,
 	opts: &Options,
+	fresh_update_if_older: chrono::Duration,
 	stale_update_if_older: chrono::Duration,
 ) -> anyhow::Result<Calendar> {
 	let last_september_first = last_september_first();
@@ -75,7 +76,7 @@ pub async fn assemble_full_year_from_cache(
 	if !did_refresh_everything {
 		// no need to refresh 3w-3w if everything was just requested
 		cache
-			.request_days_fresh(fresh_from, fresh_to, client, opts)
+			.refresh_days_conditional(fresh_from, fresh_to, client, opts, fresh_update_if_older)
 			.await?;
 	}
 
@@ -88,6 +89,7 @@ pub async fn assemble_full_year_from_db(
 	fresh_to: NaiveDate,
 	client: &Client,
 	opts: &Options,
+	fresh_update_if_older: chrono::Duration,
 	stale_update_if_older: chrono::Duration,
 ) -> anyhow::Result<Calendar> {
 	let calendar = db
@@ -98,6 +100,7 @@ pub async fn assemble_full_year_from_db(
 				fresh_to,
 				client,
 				opts,
+				fresh_update_if_older,
 				stale_update_if_older,
 			)
 			.await

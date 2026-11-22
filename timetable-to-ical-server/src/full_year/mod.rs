@@ -26,13 +26,16 @@ pub async fn full_year_assemble_ical(
 	};
 
 	let (fresh_from, fresh_to) = range_3w_3w();
+	let fresh_update_if_older = chrono::Duration::minutes(10);
 	let stale_update_if_older = chrono::Duration::days(1);
+
 	let calendar = cache::assemble_full_year_from_db(
 		&mut cache_db,
 		fresh_from,
 		fresh_to,
 		&client,
 		opts,
+		fresh_update_if_older,
 		stale_update_if_older,
 	)
 	.await

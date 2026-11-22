@@ -16,7 +16,7 @@ impl WeekNum {
 		let date_monday = date - Duration::days(date.weekday().num_days_from_monday() as _);
 		let sept_1_monday = sept_1 - Duration::days(sept_1.weekday().num_days_from_monday() as _);
 
-		let diff_days = (date_monday - sept_1_monday).num_days();
+		let diff_days = (date_monday.date_naive() - sept_1_monday).num_days();
 		let diff_weeks_i64 = diff_days / 7;
 
 		let diff_weeks = match diff_weeks_i64.try_into() {

@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::Context;
+use chrono::NaiveDate;
 use kreta_rs::{
 	client::Client,
 	types::{AbsenceRaw, ExamRaw, HomeworkRaw, LessonRaw},
@@ -37,8 +38,8 @@ type CombinedTimetable = Vec<CombinedLesson>;
 
 pub async fn fetch_combined_with_remainder(
 	client: &Client,
-	from: chrono::DateTime<chrono::Local>,
-	to: chrono::DateTime<chrono::Local>,
+	from: NaiveDate,
+	to: NaiveDate,
 ) -> anyhow::Result<(
 	Vec<CombinedLesson>,
 	HashMap<LessonHashByHomework, HomeworkRaw>,
@@ -57,8 +58,8 @@ pub async fn fetch_combined_with_remainder(
 /// they get thrown away by this function.
 pub async fn fetch_combined(
 	client: &Client,
-	from: chrono::DateTime<chrono::Local>,
-	to: chrono::DateTime<chrono::Local>,
+	from: NaiveDate,
+	to: NaiveDate,
 ) -> anyhow::Result<Vec<CombinedLesson>> {
 	let preprocessed = receive::get_preprocessed_range(client, from, to)
 		.await

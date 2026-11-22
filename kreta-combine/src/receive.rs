@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::Context;
+use chrono::NaiveDate;
 use kreta_rs::client::Client;
 
 use crate::{
@@ -10,8 +11,8 @@ use crate::{
 
 pub async fn get_preprocessed_range(
 	client: &Client,
-	from: chrono::DateTime<chrono::Local>,
-	to: chrono::DateTime<chrono::Local>,
+	from: NaiveDate,
+	to: NaiveDate,
 ) -> anyhow::Result<Preprocessed> {
 	use futures::StreamExt;
 	let timetable = async {

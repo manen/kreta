@@ -1,17 +1,17 @@
-use chrono::{DateTime, TimeZone};
+use chrono::NaiveDate;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 /// iterator that splits up time into pieces with a maximum size and optional distance in between
-pub struct Timesplit<Tz: TimeZone> {
-	i: chrono::DateTime<Tz>,
-	end: chrono::DateTime<Tz>,
+pub struct Timesplit {
+	i: NaiveDate,
+	end: NaiveDate,
 
 	max_dur: chrono::Duration,
 	/// the amount of time between a `to` output and the next `from` output
 	gap: chrono::Duration,
 }
-impl<Tz: TimeZone> Iterator for Timesplit<Tz> {
-	type Item = (chrono::DateTime<Tz>, chrono::DateTime<Tz>);
+impl Iterator for Timesplit {
+	type Item = (NaiveDate, NaiveDate);
 
 	fn size_hint(&self) -> (usize, Option<usize>) {
 		let remaining = self.end.clone() - self.i.clone();
@@ -35,16 +35,22 @@ impl<Tz: TimeZone> Iterator for Timesplit<Tz> {
 
 /// creates a new range of times \
 /// usage from here is similar to std::ops::Range, just an iterator
-pub fn range<Tz: TimeZone>(
-	from: DateTime<Tz>,
-	to: DateTime<Tz>,
+pub fn range(
+	from: NaiveDate,
+	to: NaiveDate,
 	max_duration: chrono::Duration,
 	gap: chrono::Duration,
-) -> Timesplit<Tz> {
+) -> Timesplit {
+	let dur = if max_duration < chrono::Duration::days(1) {
+		chrono::Duration::days(1)
+	} else {
+		max_duration
+	};
+
 	Timesplit {
 		i: from,
 		end: to,
-		max_dur: max_duration,
+		max_dur: dur,
 		gap,
 	}
 }

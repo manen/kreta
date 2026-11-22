@@ -1,5 +1,6 @@
 use anyhow::Context;
 use calhelp::{Calendar, Event};
+use chrono::NaiveDate;
 use chrono_tz::Europe::Budapest;
 use kreta_combine::CombinedLesson;
 use kreta_rs::client::Client;
@@ -38,8 +39,8 @@ pub fn map_combined<'a>(
 
 pub async fn combined_range_calendar_file(
 	client: &Client,
-	from: chrono::DateTime<chrono::Local>,
-	to: chrono::DateTime<chrono::Local>,
+	from: NaiveDate,
+	to: NaiveDate,
 	opts: &Options,
 ) -> anyhow::Result<String> {
 	combined_range_calendar(client, from, to, opts)
@@ -49,8 +50,8 @@ pub async fn combined_range_calendar_file(
 
 pub async fn combined_range_calendar(
 	client: &Client,
-	from: chrono::DateTime<chrono::Local>,
-	to: chrono::DateTime<chrono::Local>,
+	from: NaiveDate,
+	to: NaiveDate,
 	opts: &Options,
 ) -> anyhow::Result<Calendar> {
 	let (combined, remaining_homework, remaining_exams) =
@@ -61,7 +62,8 @@ pub async fn combined_range_calendar(
 
 	// -- add remaining entries
 	let remaining_homework_iter = remaining_homework.into_iter().map(|(_, homework)| {
-		let deadline_day = homework.date_deadline.with_timezone(&Budapest);
+		// let deadline_day = homework.date_deadline.with_timezone(&Budapest);
+		let deadline_day = homework.date_deadline;
 
 		// let mut event = Event::new(uid, deadline_day.clone());
 		// event.push(Summary::new(format!(
@@ -78,7 +80,7 @@ pub async fn combined_range_calendar(
 				"{} {}",
 				opts.homework_given_prefix, homework.subject_name
 			))
-			.dt_all_day(deadline_day.date_naive());
+			.dt_all_day(deadline_day);
 
 		let date_assigned = homework.date_assigned.format("%Y %B %d");
 
@@ -124,7 +126,7 @@ pub async fn combined_range_calendar(
 				"{} {} - {}{pretty_print}",
 				opts.announced_exam_prefix, exam.subject_name, exam.topic
 			))
-			.dt_all_day(exam.date.date_naive())
+			.dt_all_day(exam.date)
 			.location(exam.method.desc.clone());
 
 		anyhow::Ok(event)

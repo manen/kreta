@@ -6,6 +6,7 @@ use crate::clients::Clients;
 pub mod combine;
 
 pub mod clients;
+pub mod full_year;
 pub mod k8;
 pub mod landing;
 pub mod timetables;
@@ -27,6 +28,7 @@ async fn main() -> anyhow::Result<()> {
 			.service(landing::index)
 			.service(landing::styles)
 			.service(timetables::login_k8::combine_k8)
+			.service(timetables::login_k8::full_year_k8)
 			.service(timetables::login_k8::absences_k8)
 			.service(timetables::login_k8::archive_ical_k8)
 			.service(k8::create_k8)

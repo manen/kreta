@@ -13,9 +13,9 @@ pub mod login_k8;
 pub mod utils_receive_opts;
 pub use utils_receive_opts::OptsParams;
 
-use chrono::Local;
+use chrono::{Local, NaiveDate};
 
-fn range_3w_3w() -> (chrono::DateTime<Local>, chrono::DateTime<Local>) {
+pub(crate) fn range_3w_3w() -> (NaiveDate, NaiveDate) {
 	// 	let (start, end) = {
 	// 		let today = Utc::now().date_naive();
 	// 		let start = today - chrono::Duration::weeks(3);
@@ -30,10 +30,10 @@ fn range_3w_3w() -> (chrono::DateTime<Local>, chrono::DateTime<Local>) {
 	// 	let start = DateTime::from_naive_utc_and_offset(start, Utc);
 	// 	let end = DateTime::from_naive_utc_and_offset(end, Utc);
 
-	let now = Local::now();
+	let today = Local::now().date_naive();
 
-	let start = now - chrono::Duration::weeks(3);
-	let end = now + chrono::Duration::weeks(3);
+	let start = today - chrono::Duration::weeks(3);
+	let end = today + chrono::Duration::weeks(3);
 
 	(start, end)
 }

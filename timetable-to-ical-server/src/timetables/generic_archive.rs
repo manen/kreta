@@ -18,7 +18,7 @@ pub async fn generic_archive_ical(
 	};
 	let client = client.lock().await;
 
-	let (start, end) = (last_september_first(), Local::now());
+	let (start, end) = (last_september_first(), Local::now().date_naive());
 
 	let timetable = {
 		timetable_to_ical::combine::combined_range_calendar_file(&client, start, end, opts).await?

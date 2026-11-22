@@ -1,4 +1,7 @@
 use anyhow::{Context, anyhow};
+#[cfg(feature = "timerange")]
+#[cfg(feature = "client")]
+use chrono::NaiveDate;
 
 #[cfg(feature = "timerange")]
 #[cfg(feature = "client")]
@@ -47,8 +50,8 @@ impl Client {
 	/// so no need for this function to be async
 	pub fn exams_range_stream(
 		&self,
-		from: chrono::DateTime<chrono::Local>,
-		to: chrono::DateTime<chrono::Local>,
+		from: NaiveDate,
+		to: NaiveDate,
 	) -> impl futures::Stream<Item = anyhow::Result<Vec<ExamRaw>>> {
 		use futures::stream::FuturesUnordered;
 
@@ -74,8 +77,8 @@ impl Client {
 	/// exams query with no maximum distance between from & to
 	pub async fn exams_range(
 		&self,
-		from: chrono::DateTime<chrono::Local>,
-		to: chrono::DateTime<chrono::Local>,
+		from: NaiveDate,
+		to: NaiveDate,
 	) -> anyhow::Result<Vec<ExamRaw>> {
 		use futures::StreamExt;
 

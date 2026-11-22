@@ -33,6 +33,13 @@ impl Calendar {
 		}
 	}
 
+	pub fn events(&self) -> impl Iterator<Item = &Event> {
+		self.events.iter()
+	}
+	pub fn take_events(self) -> impl Iterator<Item = Event> {
+		self.events.into_iter()
+	}
+
 	pub fn to_string(&self) -> String {
 		let mut calendar = ICalendar::new("2.0", "timetable-to-ical");
 

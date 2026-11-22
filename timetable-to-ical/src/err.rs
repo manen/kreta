@@ -8,7 +8,7 @@ pub fn result_as_timetable<E: Display + Debug>(res: Result<String, E>) -> String
 	match res {
 		Ok(a) => a,
 		Err(err) => {
-			let today = Local::now().date_naive();
+			let today = Local::now();
 			//
 			// 			let uuid = uuid::Uuid::new_v4();
 			// 			let uuid = format!("{uuid}");

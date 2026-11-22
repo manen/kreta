@@ -135,7 +135,10 @@ async fn absences() -> anyhow::Result<()> {
 	let mut client = Client::full_login(&credentials).await?;
 
 	let (from, to) = ("2025-12-13", "2026-02-03");
-	let (from, to) = (parse_simple_date(from)?, parse_simple_date(to)?);
+	let (from, to) = (
+		parse_simple_date(from)?.date_naive(),
+		parse_simple_date(to)?.date_naive(),
+	);
 
 	let absences = client.absences_range(from, to).await?;
 	println!("{absences:#?}");

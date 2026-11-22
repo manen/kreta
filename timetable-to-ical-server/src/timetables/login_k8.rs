@@ -81,3 +81,28 @@ pub async fn absences_k8(
 		}
 	}
 }
+
+#[get("/k8/{k8}/full_year.ical")]
+pub async fn full_year_k8(
+	k8: web::Path<String>,
+	signer: web::Data<Signer>,
+	clients: web::Data<Mutex<Clients>>,
+	opts: web::Query<OptsParams>,
+) -> impl Responder {
+	let timetable = handle_timetable_err_async(async move {
+		let k8 = k8.into_inner();
+		let credentials = crate::k8::decode_k8(&k8, &signer)
+			.with_context(|| format!("failed to decode k8 {k8}"))?;
+
+		let opts = opts.extract_options()?;
+
+		let timetable =
+			crate::full_year::full_year_assemble_ical(&credentials, clients, &opts).await?;
+		anyhow::Ok(timetable)
+	})
+	.await;
+
+	HttpResponse::Ok()
+		.content_type("text/calendar")
+		.body(timetable)
+}

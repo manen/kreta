@@ -62,10 +62,7 @@ pub async fn assemble_full_year_from_cache(
 	let last_september_first = last_september_first();
 	let next_september_first = last_september_first + chrono::Duration::days(365);
 
-	cache
-		.request_days_fresh(fresh_from, fresh_to, client, opts)
-		.await?;
-	cache
+	let did_refresh_everything = cache
 		.refresh_days_conditional(
 			last_september_first,
 			next_september_first,
@@ -74,6 +71,13 @@ pub async fn assemble_full_year_from_cache(
 			stale_update_if_older,
 		)
 		.await?;
+
+	if !did_refresh_everything {
+		// no need to refresh 3w-3w if everything was just requested
+		cache
+			.request_days_fresh(fresh_from, fresh_to, client, opts)
+			.await?;
+	}
 
 	let calendar = cache.to_calendar();
 	anyhow::Ok(calendar)

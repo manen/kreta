@@ -83,6 +83,7 @@ impl CacheContent {
 
 		Ok(())
 	}
+	/// returns true if we refreshed and false if cache was sufficiently young
 	pub async fn refresh_days_conditional(
 		&mut self,
 		from: NaiveDate,
@@ -90,7 +91,7 @@ impl CacheContent {
 		client: &Client,
 		opts: &Options,
 		update_if_older: chrono::Duration,
-	) -> anyhow::Result<()> {
+	) -> anyhow::Result<bool> {
 		// we're making a shortcut and only not fetching again if all the days are in cache limits
 		// so if even a day's too old we're refetching everything
 
@@ -122,13 +123,13 @@ impl CacheContent {
 			println!(
 				"cache is fetching from {from} to {to} since something was older than {update_if_older}"
 			);
-			self.request_days_fresh(from, to, client, opts).await
+			self.request_days_fresh(from, to, client, opts).await?;
 		} else {
 			println!(
 				"cache is returning old data from {from} to {to} since nothing is older than {update_if_older}"
 			);
-			Ok(())
 		}
+		Ok(should_fetch_fresh)
 	}
 
 	// delete

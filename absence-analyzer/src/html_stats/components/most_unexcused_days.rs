@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use chrono::NaiveDate;
+
 use crate::{AbsenceDetails, AbsenceRaw, ExcuseType};
 
 pub fn most_unexcused_days_html(iter: impl Iterator<Item = AbsenceRaw>) -> String {
@@ -15,8 +17,6 @@ pub fn most_unexcused_days_html(iter: impl Iterator<Item = AbsenceRaw>) -> Strin
 	let p = format!(
 		"
 	<div>
-		jó ezzel most nincs időm igazán foglalkozni de itt a dátum a hiányzás előtti nap nem aznap
-		szóval ha pl október harmadikán van igazolatlanod itt október 2-t fog írni
 		<p>{days}</p>
 	</div>"
 	);
@@ -25,7 +25,7 @@ pub fn most_unexcused_days_html(iter: impl Iterator<Item = AbsenceRaw>) -> Strin
 
 pub fn unexcused_amount_by_date(
 	iter: impl Iterator<Item = AbsenceRaw>,
-) -> HashMap<String, AbsenceDetails> {
+) -> HashMap<NaiveDate, AbsenceDetails> {
 	let mut days = HashMap::new();
 
 	for absence in iter {
@@ -33,13 +33,15 @@ pub fn unexcused_amount_by_date(
 		match excuse_type {
 			Ok(ExcuseType::Unexcused | ExcuseType::ToBeExcused) => {
 				// igazolatlan vagy igazolando szoval szamoljuk
+				let day = absence.lesson.start_time.date_naive();
+				crate::by_excuse::push_to_absence_buf(
+					&mut days,
+					day.to_owned(),
+					absence.late_by_minutes,
+				);
 			}
 			_ => continue,
 		}
-
-		let day = absence.lesson.start_time.format("").to_string();
-
-		crate::by_excuse::push_to_absence_buf(&mut days, day.to_owned(), absence.late_by_minutes);
 	}
 
 	days

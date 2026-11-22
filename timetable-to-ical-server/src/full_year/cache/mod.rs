@@ -79,6 +79,7 @@ pub async fn assemble_full_year_from_cache(
 			.refresh_days_conditional(fresh_from, fresh_to, client, opts, fresh_update_if_older)
 			.await?;
 	}
+	cache.discard_if_older_than(last_september_first);
 
 	let calendar = cache.to_calendar();
 	anyhow::Ok(calendar)

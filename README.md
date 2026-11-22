@@ -51,6 +51,10 @@ however, to avoid freaking out the kreta idp server, your access tokens are cach
 - a sha256 hash of your password, to ensure later requests aren't using a false password
 - your access & refresh tokens
 
+if you use the `full_year.ical` endpoint, your lessons get cached and re-served, so these date points are stored on the server on disk:
+ - a hash of your username, password and institution id (the password cannot be read)
+ - your events along with when they were updated
+
 [you can review the relevant code here](./timetable-to-ical-server/src/clients.rs)
 
 when using the default k8 credentials system, your login details are encrypted using [age](https://crates.io/crates/age), only decrypted on the server, making the `.ical` requests safe(r) over bare http. a k8 generated from one `timetable-to-ical-server` instance will not be vaild on another.

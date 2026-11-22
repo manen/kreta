@@ -32,7 +32,8 @@ impl CacheContent {
 		let events = timetable.take_events();
 
 		let now = Local::now();
-		let last_updated_line = format!("\n\nlast updated {now}");
+		let now_fmt = now.format("%Y-%m-%d %H:%M:%S");
+		let last_updated_line = format!("\n\nlast updated {now_fmt}");
 
 		let events = events.filter_map(|mut event| {
 			// append last updated date to desc
@@ -102,9 +103,9 @@ impl CacheContent {
 			match day {
 				Some(day) => {
 					let last_updated_elapsed = now - day.last_updated;
-					println!(
-						"last updated: {last_updated_elapsed}\nupdate if older: {update_if_older}\n"
-					);
+					// println!(
+					// 	"last updated: {last_updated_elapsed}\nupdate if older: {update_if_older}\n"
+					// );
 					if last_updated_elapsed > update_if_older {
 						should_fetch_fresh = true;
 					}

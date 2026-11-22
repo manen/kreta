@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Event {
+	uuid: uuid::Uuid,
+
 	summary: Option<String>,
 	dt_start: Option<DateTime<Local>>,
 	dt_end: Option<DateTime<Local>>,
@@ -16,6 +18,7 @@ impl Event {
 	/// uses a randomized uuid
 	pub fn new() -> Self {
 		Self {
+			uuid: uuid::Uuid::new_v4(),
 			summary: None,
 			dt_start: None,
 			dt_end: None,
@@ -115,8 +118,7 @@ impl Event {
 		let dt_start_str = self.format_datetime(dt_start);
 		let dt_end_str = self.dt_end.map(|dt_end| self.format_datetime(dt_end));
 
-		let uuid = uuid::Uuid::new_v4();
-		let uuid = format!("{uuid}");
+		let uuid = format!("{}", self.uuid);
 		let mut ics_event: ics::Event<'static> = ics::Event::new(uuid, dt_start_str.clone());
 
 		match self.summary {
@@ -143,7 +145,7 @@ impl Event {
 
 		match self.description {
 			Some(desc) => {
-				let desc_escaped = escape_desc_text(&desc);
+				let desc_escaped = escape_desc_text(desc.replace("\n\n\n", "\n\n").trim());
 				ics_event.push(Description::new(desc_escaped))
 			}
 			None => {}

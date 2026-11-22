@@ -44,5 +44,5 @@ chrono = { version = "0.4.45", default-features = false, features = [
 chrono-tz = "0.10.4"
 futures = { version = "0.3.34", default-features = false, features = ["std"] }
 ics = "0.5.8"
-uuid = { version = "1.29.3", features = ["v4"] }
+uuid = { version = "1.29.3", features = ["v4", "serde"] }
 age = "0.12.1"

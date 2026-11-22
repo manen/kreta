@@ -71,32 +71,6 @@ pub fn lesson_to_event_explicit(
 	opts: &Options,
 	extra_data: ExtraData,
 ) -> anyhow::Result<Event> {
-	// let uid = uuid::Uuid::new_v4();
-	// let uid = format!("{uid}");
-
-	// 	let (dtstamp, start_escaped, end_escaped) = {
-	// 		let start: DateTime<Local> = lesson.start_time;
-	// 		let end: DateTime<Local> = lesson.end_time;
-	// 		// let (start, end) = (start.with_timezone(&Budapest), end.with_timezone(&Budapest));
-	//
-	// 		if start == end {
-	// 			// if start_time == end_time => make it an all day event (so far only seems to be school holidays n shit)
-	// 			let start = start.with_timezone(&Budapest);
-	// 			let event_time = start.format(FORMAT_DATE).to_string();
-	// 			(
-	// 				start.format("%Y%m%dT000000Z").to_string(),
-	// 				event_time.clone(),
-	// 				event_time,
-	// 			)
-	// 		} else {
-	// 			let dtstamp = start.format("%Y%m%dT000000Z").to_string();
-	// 			let start = format!("{start}");
-	// 			let end = format!("{end}");
-	//
-	// 			(dtstamp, start, end)
-	// 		}
-	// 	};
-
 	let name = {
 		let name_base: Cow<str> = if opts.lowercase_subject_names {
 			lesson.name.to_lowercase().into()
@@ -187,16 +161,14 @@ pub fn lesson_to_event_explicit(
 		}
 	};
 
-	// let mut event = Event::new(uid, dtstamp);
-	// event.push(Summary::new(name));
-	// event.push(DtStart::new(start_escaped));
-	// event.push(DtEnd::new(end_escaped));
-	// event.push(Location::new(location));
-
 	let mut event = Event::new();
 	event.summary(name);
-	event.dt_start(lesson.start_time);
-	event.dt_end(lesson.end_time);
+	if lesson.start_time == lesson.end_time {
+		event.dt_all_day(lesson.start_time);
+	} else {
+		event.dt_start(lesson.start_time);
+		event.dt_end(lesson.end_time);
+	}
 	event.location(location);
 
 	let pretty_print = if opts.pretty_print_as_desc {

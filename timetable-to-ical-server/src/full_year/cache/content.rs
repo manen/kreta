@@ -62,7 +62,7 @@ impl CacheContent {
 		// so we know we have data for that day it's just no events
 		{
 			let mut i = from;
-			while i <= to {
+			while i < to {
 				if !days_append_buf.contains_key(&i) {
 					let cache_day_data = CacheDayData {
 						last_updated: now,
@@ -99,7 +99,7 @@ impl CacheContent {
 
 		let mut should_fetch_fresh = false;
 		let mut i = from;
-		while i <= to && !should_fetch_fresh {
+		while i < to && !should_fetch_fresh {
 			let day = self.days.get(&i);
 			match day {
 				Some(day) => {

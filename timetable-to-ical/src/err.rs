@@ -8,20 +8,24 @@ pub fn result_as_timetable<E: Display + Debug>(res: Result<String, E>) -> String
 	match res {
 		Ok(a) => a,
 		Err(err) => {
-			let today = Local::now();
-
-			let mut err_event = Event::new();
-			err_event.summary("timetable error");
-			err_event.dt_all_day(today);
-			err_event.location("see event notes for details");
-
-			let notes = format!("{err}\n\n{err:?}");
-			err_event.description(&notes);
-
+			let err_event = error_as_event(err);
 			let calendar = Calendar::new(std::iter::once(err_event));
 			calendar.to_string_publish()
 		}
 	}
+}
+
+pub fn error_as_event<E: Display + Debug>(err: E) -> Event {
+	let today = Local::now();
+
+	let mut err_event = Event::new();
+	err_event.summary("timetable error");
+	err_event.dt_all_day(today);
+	err_event.location("see event notes for details");
+
+	let notes = format!("{err}\n\n{err:?}");
+	err_event.description(&notes);
+	err_event
 }
 
 pub fn handle_timetable_err<E: Display + Debug, F: FnOnce() -> Result<String, E>>(f: F) -> String {

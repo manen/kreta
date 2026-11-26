@@ -55,6 +55,55 @@ impl Caches {
 	}
 }
 
+pub async fn assemble_full_year_from_cache(
+	cache: &mut CacheContent,
+	fresh_from: NaiveDate,
+	fresh_to: NaiveDate,
+	client: &Client,
+	opts: &Options,
+	fresh_update_if_older: chrono::Duration,
+	stale_update_if_older: chrono::Duration,
+) -> Calendar {
+	let mut refresh = async || {
+		let last_september_first = last_september_first();
+		let next_september_first = last_september_first + chrono::Duration::days(365);
+
+		let did_refresh_everything = cache
+			.refresh_days_conditional(
+				last_september_first,
+				next_september_first,
+				client,
+				opts,
+				stale_update_if_older,
+			)
+			.await?;
+
+		if !did_refresh_everything {
+			// no need to refresh 3w-3w if everything was just requested
+			cache
+				.refresh_days_conditional(fresh_from, fresh_to, client, opts, fresh_update_if_older)
+				.await?;
+		}
+		cache.discard_if_older_than(last_september_first);
+
+		anyhow::Ok(())
+	};
+	let refresh = refresh().await.with_context(|| "failed to refresh cache");
+
+	let mut calendar = cache.to_calendar();
+
+	match refresh {
+		Ok(a) => a,
+		Err(err) => {
+			let err_event = timetable_to_ical::err::error_as_event(err);
+			let err_calendar = Calendar::new(std::iter::once(err_event));
+			calendar = calendar.merge(err_calendar);
+		}
+	}
+
+	calendar
+}
+
 pub async fn assemble_full_year_from_encrypted_cache(
 	cache: &mut Encrypted<CacheContent>,
 	fresh_from: NaiveDate,
@@ -89,54 +138,6 @@ pub async fn assemble_full_year_from_encrypted_cache(
 	Ok(calendar)
 }
 
-pub async fn assemble_full_year_from_cache(
-	cache: &mut CacheContent,
-	fresh_from: NaiveDate,
-	fresh_to: NaiveDate,
-	client: &Client,
-	opts: &Options,
-	fresh_update_if_older: chrono::Duration,
-	stale_update_if_older: chrono::Duration,
-) -> Calendar {
-	let mut refresh = async || {
-		let last_september_first = last_september_first();
-		let next_september_first = last_september_first + chrono::Duration::days(365);
-
-		let did_refresh_everything = cache
-			.refresh_days_conditional(
-				last_september_first,
-				next_september_first,
-				client,
-				opts,
-				stale_update_if_older,
-			)
-			.await?;
-
-		if !did_refresh_everything {
-			// no need to refresh 3w-3w if everything was just requested
-			cache
-				.refresh_days_conditional(fresh_from, fresh_to, client, opts, fresh_update_if_older)
-				.await?;
-		}
-		cache.discard_if_older_than(last_september_first);
-
-		anyhow::Ok(())
-	};
-	let refresh = refresh().await;
-
-	let mut calendar = cache.to_calendar();
-
-	match refresh {
-		Ok(a) => a,
-		Err(err) => {
-			let err_event = timetable_to_ical::err::error_as_event(err);
-			let err_calendar = Calendar::new(std::iter::once(err_event));
-			calendar = calendar.merge(err_calendar);
-		}
-	}
-
-	calendar
-}
 pub async fn assemble_full_year_from_db(
 	db: &mut Db<Encrypted<CacheContent>>,
 	fresh_from: NaiveDate,
